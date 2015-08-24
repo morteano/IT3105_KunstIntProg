@@ -4,8 +4,8 @@ __author__ = 'MortenAlver'
 def getinput(data):
     f = open(data, 'r')
     firstline = f.readline()
-    height = firstline[1]
-    width = firstline[3]
+    height = firstline.split(",")[0][1:]
+    width = firstline.split(",")[1][0:-2]
     secondline = f.readline()
     start = (secondline[1], secondline[3])
     goal = (secondline[6], secondline[8])
