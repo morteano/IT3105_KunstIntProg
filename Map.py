@@ -1,52 +1,57 @@
 __author__ = 'Butikk'
 
+#COMPLETE
+
+from Node import Node
+
 class Map:
 
-	def __init__(self):
+    def __init__(self):
 
-		self.map = []
+        self.map = []
 
-		self.width = 0
-		self.height = 0
+        self.width = 0
+        self.height = 0
 
-	def readMap(self, textFile):
-		file = open(textFile)
+    def readMap(self, textFile):
+        file = open(textFile)
 
-		firstLine = file.readline()
-		firstLine = firstLine.split()
+        firstLine = file.readline()
+        firstLine = firstLine.split()
 
-		self.width = int(firstLine[0])
-		self.height = int(firstLine[1])
+        self.width = int(firstLine[0])
+        self.height = int(firstLine[1])
 
-		#create an empty map with corresponding size
-		for i in range(self.height):
-			self.map.append([])
-			for j in range(self.width):
-				self.map[i].append('0')
+        #create an empty map with corresponding size
+        for i in range(self.height):
+            self.map.append([])
+            for j in range(self.width):
+                self.map[i].append(Node(j, i))
 
-		secondLine = file.readline()
-		secondLine = secondLine.split()
+        secondLine = file.readline()
+        secondLine = secondLine.split()
 
-		#add start and goal position to map
-		self.map[int(secondLine[1])][int(secondLine[0])] = 's'
-		self.map[int(secondLine[3])][int(secondLine[2])] = 'g'
+        #add start and goal position to map
+        self.map[int(secondLine[1])][int(secondLine[0])].type = 'S'
+        self.map[int(secondLine[3])][int(secondLine[2])].type = 'G'
 
-		#add obstacles to map
-		for line in file:
-			line = line.split()
-			for i in range(int(line[3])):
-				for j in range(int(line[2])):
-					self.map[int(line[1]) + i][int(line[0]) + j] = '1'
+        #add obstacles to map
+        for line in file:
+            line = line.split()
+            for i in range(int(line[3])):
+                for j in range(int(line[2])):
+                    self.map[int(line[1]) + i][int(line[0]) + j].type = '#'
 
 
-		file.close()
+        file.close()
 
-	def getPos(self, x, y):
-		return self.map[y][x]
-
-	def printMap(self):
-		for i in range(self.height - 1, -1, -1):
-			print(self.map[i])
+    def getPos(self, x, y):
+        return self.map[y][x]
+"""
+    def printMap(self):
+        for i in range(self.height):
+            for j in range(self.width):
+                print(self.getPos(i, j).type)"""
 
 """
 def getinput(data):

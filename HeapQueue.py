@@ -1,5 +1,7 @@
 __author__ = 'Butikk'
 
+#COMPLETE, I hope
+
 import math
 
 class HeapQueue:
@@ -11,10 +13,14 @@ class HeapQueue:
         return self.queue[int(math.floor((self.queue.index(node) - 1) / 2))]
 
     def leftChild(self, node):
-        return self.queue[(self.queue.index(node) * 2) + 1]
+        if (self.queue.index(node) * 2) + 1 < self.length:
+            return self.queue[(self.queue.index(node) * 2) + 1]
+        return None
 
     def rightChild(self, node):
-        return self.queue[(self.queue.index(node) * 2) + 2]
+        if (self.queue.index(node) * 2) + 2 < self.length:
+            return self.queue[(self.queue.index(node) * 2) + 2]
+        return None
 
     def insert(self, node):
         self.queue.append(node)
@@ -25,26 +31,30 @@ class HeapQueue:
 
         #compares parent with the new node, and performs potential switching until heap property is reached
         while self.queue.index(currentNode) > 0 and parentNode.value > currentNode.value:
-            currentNode, parentNode = parentNode, currentNode
+            currentNode.value, parentNode.value = parentNode.value, currentNode.value
             currentNode = parentNode
+            parentNode = self.parent(currentNode)
+
 
     #maintains heap property by switching nodes downwards
     def maintainHeapProperty(self, currentNode):
         leftChild = self.leftChild(currentNode)
         rightChild = self.rightChild(currentNode)
 
-        largestNode = currentNode
+        smallestNode = currentNode
+        if leftChild != None:
+            if self.queue.index(leftChild) < self.length and leftChild.value < currentNode.value:
+                smallestNode = leftChild
 
-        if self.queue.index(leftChild) < self.length and leftChild.value < currentNode.value:
-            largestNode = leftChild
+        if rightChild != None:
+            if self.queue.index(rightChild) < self.length and rightChild.value < smallestNode.value:
+                smallestNode = rightChild
 
-        if self.queue.index(rightChild) < self.length and rightChild.value < largestNode.value:
-            largestNode = rightChild
-
-        if largestNode == currentNode:
+        if smallestNode == currentNode:
             return
         else:
-            currentNode, largestNode = largestNode, currentNode
+            currentNode.value, smallestNode.value = smallestNode.value, currentNode.value
+            currentNode = smallestNode
             self.maintainHeapProperty(currentNode)
 
     def get(self):

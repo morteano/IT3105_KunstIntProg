@@ -1,30 +1,49 @@
 __author__ = 'MortenAlver'
 
+import math
 from Map import Map
 from HeapQueue import HeapQueue
-from Node import Node
-
+from graphics import *
 
 map = Map()
-map.readMap("input0.txt")
-map.printMap()
+map.readMap("input1.txt")
 
-queue = HeapQueue()
+#display graphical map
+def displayMap(map):
+    #create graphics window with size 500x500
+    win = GraphWin("A Star", 500, 500)
 
-node = Node(0, 0)
-node.value = 5
-queue.insert(node)
-node = Node(1, 1)
-node.value = 3
-queue.insert(node)
-node = Node(2, 2)
-node.value = 6
-queue.insert(node)
-node = Node(3, 3)
-node.value = 2
-queue.insert(node)
+    #create rectangles corresponding to the map, where black is wall, red is start point and green is goal point
+    for i in range(map.height):
+        for j in range(map.width):
+            rectangle = Rectangle(Point((20 * i) + 10, (20 * j) + 10), Point((20 * i) + 30, (20 * j) + 30))
+            if map.getPos(i, j).type == '#':
+                rectangle.setFill("black")
+            elif map.getPos(i, j).type == 'S':
+                rectangle.setFill("red")
+            elif map.getPos(i, j).type == 'G':
+                rectangle.setFill("green")
 
-for i in range(4):
-    print(queue.queue[i].value)
+            #draw rectangle to the graphics window
+            rectangle.draw(win)
+
+    #makes sure the window does not close immediately. Close the window by clicking on it
+    win.getMouse()
+
+#manhattan distance
+def heuristic(nodeX, nodeY, goalX, goalY):
+    return math.abs((goalX - nodeX) + (goalY - nodeY))
+
+#the main algorithm
+def aStar(map, startX, startY, goalX, goalY):
+    startNode = map.getPos(startX, startY)
+    startNode.distance = 0
+    startNode.heuristic = heuristic(startX, startY, goalX, goalY)
+    startNode.updateValue()
+
+    priorityQueue = HeapQueue()
+    priorityQueue.insert(startNode)
+
+    #TODO
 
 
