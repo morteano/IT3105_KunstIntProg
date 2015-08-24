@@ -52,8 +52,7 @@ class HeapQueue:
 		self.queue[0] = self.queue.pop(self.length - 1)
 		self.length -= 1
 
-		print(self.queue)
-
 		self.maintainHeapProperty(0)
 
 		return value
+
