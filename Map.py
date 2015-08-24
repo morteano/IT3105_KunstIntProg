@@ -48,9 +48,6 @@ class Map:
 		for i in range(self.height - 1, -1, -1):
 			print(self.map[i])
 
-map = Map()
-map.readMap("input0.txt")
-map.printMap()
 """
 def getinput(data):
     f = open(data, 'r')
