@@ -49,3 +49,28 @@ class Map:
 	def printMap(self):
 		for i in range(self.height - 1, -1, -1):
 			print(self.map[i])
+"""
+def getinput(data):
+    f = open(data, 'r')
+    firstline = f.readline()
+    height = firstline.split(",")[0][1:]
+    width = firstline.split(",")[1][0:-2]
+    secondline = f.readline()
+    start = (secondline[1], secondline[3])
+    goal = (secondline[6], secondline[8])
+
+    for line in f:
+            print(line)
+
+    return height, width, start, goal
+
+
+def main():
+    height, width, start, goal = getinput("input0.txt")
+    print("Height: " + height)
+    print("Width: " + width)
+    print("Start: (" + start[0] + ", " + start[1] + ")")
+    print("Goal: (" + goal[0] + ", " + goal[1] + ")")
+
+if __name__ == "__main__":
+    main()"""
