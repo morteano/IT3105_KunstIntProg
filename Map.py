@@ -9,8 +9,6 @@ class Map:
 		self.width = 0
 		self.height = 0
 
-		self.readMap("Map.txt")
-
 	def readMap(self, textFile):
 		file = open(textFile)
 
@@ -49,6 +47,10 @@ class Map:
 	def printMap(self):
 		for i in range(self.height - 1, -1, -1):
 			print(self.map[i])
+
+map = Map()
+map.readMap("input0.txt")
+map.printMap()
 """
 def getinput(data):
     f = open(data, 'r')

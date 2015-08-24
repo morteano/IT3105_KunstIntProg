@@ -23,7 +23,7 @@ class HeapQueue:
 		currentNode = self.length - 1
 
 		#compares parent with the new node, and performs potential switching until heap property is reached
-		while currentNode > 0 and self.queue[self.parent(currentNode)] < self.queue[currentNode]:
+		while currentNode > 0 and self.queue[self.parent(currentNode)] > self.queue[currentNode]:
 			self.queue[currentNode], self.queue[self.parent(currentNode)] = self.queue[self.parent(currentNode)], self.queue[currentNode]
 			currentNode = self.parent(currentNode)
 
@@ -34,10 +34,10 @@ class HeapQueue:
 
 		largestNode = currentNode
 
-		if leftChild < self.length and self.queue[leftChild] > self.queue[currentNode]:
+		if leftChild < self.length and self.queue[leftChild] < self.queue[currentNode]:
 			largestNode = leftChild
 
-		if rightChild < self.length and self.queue[rightChild] > self.queue[largestNode]:
+		if rightChild < self.length and self.queue[rightChild] < self.queue[largestNode]:
 			largestNode = rightChild
 
 		if largestNode == currentNode:
