@@ -1,6 +1,6 @@
 __author__ = 'Butikk'
 
-#COMPLETE, I hope
+
 
 import math
 
@@ -59,7 +59,12 @@ class HeapQueue:
 
     def get(self):
         node = self.queue[0]
-        self.queue[0] = self.queue.pop(self.length - 1)
+        if self.length > 1:
+            self.queue[0] = self.queue.pop(self.length - 1)
+        else:
+            self.queue.pop(0)
+            self.length -= 1
+            return node
         self.length -= 1
 
         self.maintainHeapProperty(self.queue[0])

@@ -1,6 +1,6 @@
 __author__ = 'Butikk'
 
-#COMPLETE
+
 
 from Node import Node
 
@@ -13,40 +13,80 @@ class Map:
         self.width = 0
         self.height = 0
 
+    #creates 2D array of map from text file input
     def readMap(self, textFile):
         file = open(textFile)
 
         firstLine = file.readline()
         firstLine = firstLine.split()
 
-        self.width = int(firstLine[0])
-        self.height = int(firstLine[1])
+        self.height = int(firstLine[0])
+        self.width = int(firstLine[1])
 
         #create an empty map with corresponding size
         for i in range(self.height):
             self.map.append([])
             for j in range(self.width):
-                self.map[i].append(Node(j, i))
+                self.map[i].append(Node(i, j))
+
 
         secondLine = file.readline()
         secondLine = secondLine.split()
 
         #add start and goal position to map
-        self.map[int(secondLine[1])][int(secondLine[0])].type = 'S'
-        self.map[int(secondLine[3])][int(secondLine[2])].type = 'G'
+        startNode = self.getPos(int(secondLine[0]), int(secondLine[1]))
+        goalNode = self.getPos(int(secondLine[2]), int(secondLine[3]))
+
+        startNode.type = 'S'
+        goalNode.type = 'G'
+
+
 
         #add obstacles to map
         for line in file:
             line = line.split()
-            for i in range(int(line[3])):
-                for j in range(int(line[2])):
-                    self.map[int(line[1]) + i][int(line[0]) + j].type = '#'
-
+            for i in range(int(line[2])):
+                for j in range(int(line[3])):
+                    self.getPos(int(line[0]) + i, int(line[1]) + j).type = '#'
 
         file.close()
 
-    def getPos(self, x, y):
+        return startNode, goalNode
+
+    def getPos(self, y, x):
         return self.map[y][x]
+
+    #return array of all adjacent nodes to the current node on the map
+    def getNeighbours(self, node):
+        #check corners
+        if node.yPos == 0 and node.xPos == 0:
+            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos, node.xPos + 1)]
+
+        elif node.yPos == self.height - 1 and node.xPos == 0:
+            return [self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos + 1)]
+
+        elif node.yPos == 0 and node.xPos == self.width - 1:
+            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos, node.xPos - 1)]
+
+        elif node.yPos == self.height - 1 and node.xPos == self.width - 1:
+            return [self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos - 1)]
+
+        #check edges
+        elif node.yPos == 0:
+            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos, node.xPos + 1)]
+
+        elif node.yPos == self.height - 1:
+            return [self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos, node.xPos + 1)]
+
+        elif node.xPos == 0:
+            return [self.getPos(node.yPos, node.xPos + 1), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos + 1, node.xPos)]
+
+        elif node.xPos == self.width - 1:
+            return [self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos + 1, node.xPos)]
+
+        #the rest
+        else:
+            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos + 1), self.getPos(node.yPos, node.xPos - 1)]
 """
     def printMap(self):
         for i in range(self.height):
