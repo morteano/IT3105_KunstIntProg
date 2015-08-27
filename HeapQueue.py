@@ -31,6 +31,9 @@ class HeapQueue:
 
         #compares parent with the new node, and performs potential switching until heap property is reached
         while self.queue.index(currentNode) > 0 and parentNode.value > currentNode.value:
+
+            #Theres something in here screwing it up. RAGE!
+
             currentNode.value, parentNode.value = parentNode.value, currentNode.value
             currentNode = parentNode
             parentNode = self.parent(currentNode)
