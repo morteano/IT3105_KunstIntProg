@@ -78,14 +78,16 @@ def displayMap(map, (path, examined)):
     win.getMouse()
 
 #manhattan distance
-def heuristic(nodeY, nodeX, goalY, goalX):
-    return math.fabs(goalX - nodeX) + math.fabs(goalY - nodeY)
+def heuristic(nodeY, nodeX, goalY, goalX, type):
+    if type == "Astar":
+        return math.fabs(goalX - nodeX) + math.fabs(goalY - nodeY)
+    return 0
 
 #the main algorithm
-def aStar(map, startY, startX, goalY, goalX):
+def searchAlgorithm(map, startY, startX, goalY, goalX, type):
     startNode = map.getPos(startY, startX)
     startNode.distance = 0
-    startNode.heuristic = heuristic(startY, startX, goalY, goalX)
+    startNode.heuristic = heuristic(startY, startX, goalY, goalX, type)
     startNode.value = startNode.distance + startNode.heuristic
 
     #all nodes that have been examined
@@ -94,8 +96,10 @@ def aStar(map, startY, startX, goalY, goalX):
     #dictionary to keep track of previous nodes, so the path can be created in the end
     cameFrom = {}
     cameFrom[startNode] = None
-
-    priorityQueue = Stack()
+    if type == "DFS":
+        priorityQueue = Stack()
+    else:
+        priorityQueue = HeapQueue()
     priorityQueue.insert(startNode, startNode.value)
 
     currentNode = startNode
@@ -129,7 +133,7 @@ def aStar(map, startY, startX, goalY, goalX):
                 #then calculate its new value and add it to the priority queue, and update its 'cameFrom' node
                 if i.distance > currentNode.distance + 1:
                     i.distance = currentNode.distance + 1
-                    i.heuristic = heuristic(i.yPos, i.xPos, goalY, goalX)
+                    i.heuristic = heuristic(i.yPos, i.xPos, goalY, goalX, type)
                     i.value = i.distance + i.heuristic
 
                     priorityQueue.insert(i, i.value)
@@ -153,12 +157,14 @@ def wasSolved(solved):
         print("Map is not solvable")
 
 map = Map()
-start, goal = map.readMap("input3.txt")
 
-#displays the map with the resulting path with graphics
-result = aStar(map, start.yPos, start.xPos, goal.yPos, goal.xPos)
+mapInput = raw_input("Enter map text file: ")
+searchInput = raw_input("Enter search algorithm(Astar / BFS / DFS): ")
+
+start, goal = map.readMap(mapInput)
+
+
+result = searchAlgorithm(map, start.yPos, start.xPos, goal.yPos, goal.xPos, searchInput)
+
 
 displayMap(map, result)
-
-
-
