@@ -159,7 +159,9 @@ def wasSolved(solved):
 map = Map()
 
 mapInput = raw_input("Enter map text file: ")
-searchInput = raw_input("Enter search algorithm(Astar / BFS / DFS): ")
+searchInput = " "
+while searchInput not in ["Astar", "BFS", "DFS"]:
+    searchInput = raw_input("Enter search algorithm(Astar / BFS / DFS): ")
 
 start, goal = map.readMap(mapInput)
 
