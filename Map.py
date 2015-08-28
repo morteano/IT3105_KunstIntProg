@@ -1,8 +1,6 @@
-__author__ = 'Butikk'
-
-
-
+import re
 from Node import Node
+
 
 class Map:
 
@@ -13,12 +11,13 @@ class Map:
         self.width = 0
         self.height = 0
 
-    #creates 2D array of map from text file input
+
+    # Creates 2D array of map from text file input
     def readMap(self, textFile):
         file = open(textFile)
 
         firstLine = file.readline()
-        firstLine = firstLine.split()
+        firstLine = re.findall(r'\d+', firstLine)
 
         self.height = int(firstLine[0])
         self.width = int(firstLine[1])
@@ -31,7 +30,7 @@ class Map:
 
 
         secondLine = file.readline()
-        secondLine = secondLine.split()
+        secondLine = re.findall(r'\d+', secondLine)
 
         #add start and goal position to map
         startNode = self.getPos(int(secondLine[0]), int(secondLine[1]))
@@ -44,7 +43,7 @@ class Map:
 
         #add obstacles to map
         for line in file:
-            line = line.split()
+            line = re.findall(r'\d+', line)
             for i in range(int(line[2])):
                 for j in range(int(line[3])):
                     self.getPos(int(line[0]) + i, int(line[1]) + j).type = '#'
