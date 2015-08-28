@@ -142,7 +142,7 @@ def searchAlgorithm(map, startY, startX, goalY, goalX, type):
         nrOfNodes += 1
 
     print("Number of nodes: " + str(nrOfNodes))
-    #create path from goal to start
+    # Create path from goal to start
 
     wasSolved(solved)
 
