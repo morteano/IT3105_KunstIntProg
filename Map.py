@@ -69,24 +69,24 @@ class Map:
             return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos, node.xPos - 1)]
 
         elif node.yPos == self.height - 1 and node.xPos == self.width - 1:
-            return [self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos - 1)]
+            return [self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos - 1, node.xPos)]
 
         #check edges
         elif node.yPos == 0:
             return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos, node.xPos + 1)]
 
         elif node.yPos == self.height - 1:
-            return [self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos, node.xPos + 1)]
+            return [self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos + 1), self.getPos(node.yPos, node.xPos - 1)]
 
         elif node.xPos == 0:
-            return [self.getPos(node.yPos, node.xPos + 1), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos + 1, node.xPos)]
+            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos + 1)]
 
         elif node.xPos == self.width - 1:
-            return [self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos + 1, node.xPos)]
+            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos - 1, node.xPos)]
 
         #the rest
         else:
-            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos + 1), self.getPos(node.yPos, node.xPos - 1)]
+            return [self.getPos(node.yPos + 1, node.xPos), self.getPos(node.yPos, node.xPos - 1), self.getPos(node.yPos - 1, node.xPos), self.getPos(node.yPos, node.xPos + 1)]
 """
     def printMap(self):
         for i in range(self.height):

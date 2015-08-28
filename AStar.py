@@ -4,8 +4,6 @@ import math
 from Map import Map
 from graphics import *
 
-solved = False
-
 
 # Priority queue with heap as data structure
 class HeapQueue:
@@ -24,8 +22,22 @@ class HeapQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
+class Stack:
+    def __init__(self):
+        self.elements = []
+
+    def empty(self):
+        return len(self.elements) == 0
+
+    def insert(self, item, dummyValue):
+        self.elements.append(item)
+
+    def get(self):
+        return self.elements.pop()
+
+
 #display graphical map
-def displayMap(map, path):
+def displayMap(map, (path, examined)):
     #create graphics window with size 500x500
     win = GraphWin("A Star", 500, 500)
 
@@ -43,12 +55,24 @@ def displayMap(map, path):
             #draw rectangle to the graphics window
             rectangle.draw(win)
 
-    #draw the resulting path from the A Star algorithm
+    #draw the resulting path from the A Star algorithm as black circles
     for i in path:
         circle = Circle(Point(20 * i.xPos + 20, 20 * i.yPos + 20), 5)
         circle.setFill("black")
 
         circle.draw(win)
+
+    #draw the examined nodes as crosses
+    for i in examined:
+        if i not in path:
+            line1 = Line(Point(20 * i.xPos + 15, 20 * i.yPos + 15), Point(20 * i.xPos + 26, 20 * i.yPos + 26))
+            line2 = Line(Point(20 * i.xPos + 15, 20 * i.yPos + 25), Point(20 * i.xPos + 26, 20 * i.yPos + 14))
+
+            line1.setFill("black")
+            line2.setFill("black")
+
+            line1.draw(win)
+            line2.draw(win)
 
     #makes sure the window does not close immediately. Close the window by clicking on it
     win.getMouse()
@@ -71,11 +95,13 @@ def aStar(map, startY, startX, goalY, goalX):
     cameFrom = {}
     cameFrom[startNode] = None
 
-    priorityQueue = HeapQueue()
+    priorityQueue = Stack()
     priorityQueue.insert(startNode, startNode.value)
 
     currentNode = startNode
     nrOfNodes = 0
+
+    solved = False
 
     while not priorityQueue.empty():
 
@@ -110,24 +136,29 @@ def aStar(map, startY, startX, goalY, goalX):
 
                     cameFrom[i] = currentNode
         nrOfNodes += 1
+
     print("Number of nodes: " + str(nrOfNodes))
     #create path from goal to start
+
+    wasSolved(solved)
 
     finalPath = [currentNode]
     while currentNode != startNode:
         currentNode = cameFrom[currentNode]
         finalPath.append(currentNode)
-    return finalPath
+    return finalPath, examined
 
-
+def wasSolved(solved):
+    if not solved:
+        print("Map is not solvable")
 
 map = Map()
-start, goal = map.readMap("input6.txt")
+start, goal = map.readMap("input3.txt")
 
 #displays the map with the resulting path with graphics
 result = aStar(map, start.yPos, start.xPos, goal.yPos, goal.xPos)
-if solved:
-    displayMap(map, result)
-else:
-    print("Map is not solvable")
-    displayMap(map, result)
+
+displayMap(map, result)
+
+
+
