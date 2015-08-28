@@ -1,22 +1,22 @@
-__author__ = 'MortenAlver'
-
-#data structure for the HeapQueue class
+# Data structure for the HeapQueue class
 import heapq
-
 import math
 from Map import Map
 from graphics import *
 
-#Priority queue with heap as data structure
+solved = False
+
+
+# Priority queue with heap as data structure
 class HeapQueue:
     def __init__(self):
         self.elements = []
 
-    #checks if heap is empty
+    # Checks if heap is empty
     def empty(self):
         return len(self.elements) == 0
 
-    #adds element to the heap and makes sure the node with lowest value is on top
+    # Adds element to the heap and makes sure the node with lowest value is on top
     def insert(self, item, priority):
         heapq.heappush(self.elements, (priority, item))
 
@@ -75,7 +75,7 @@ def aStar(map, startY, startX, goalY, goalX):
     priorityQueue.insert(startNode, startNode.value)
 
     currentNode = startNode
-
+    nrOfNodes = 0
 
     while not priorityQueue.empty():
 
@@ -88,6 +88,7 @@ def aStar(map, startY, startX, goalY, goalX):
 
         #if the goal is reached, break out of the loop
         if map.getPos(goalY, goalX) == currentNode:
+            solved = True
             break
 
         #find all neighbours of the current node
@@ -108,20 +109,25 @@ def aStar(map, startY, startX, goalY, goalX):
                     priorityQueue.insert(i, i.value)
 
                     cameFrom[i] = currentNode
-
-
+        nrOfNodes += 1
+    print("Number of nodes: " + str(nrOfNodes))
     #create path from goal to start
 
     finalPath = [currentNode]
     while currentNode != startNode:
         currentNode = cameFrom[currentNode]
         finalPath.append(currentNode)
-
     return finalPath
 
+
+
 map = Map()
-start, goal = map.readMap("input5.txt")
+start, goal = map.readMap("input6.txt")
 
 #displays the map with the resulting path with graphics
-displayMap(map, aStar(map, start.yPos, start.xPos, goal.yPos, goal.xPos))
-
+result = aStar(map, start.yPos, start.xPos, goal.yPos, goal.xPos)
+if solved:
+    displayMap(map, result)
+else:
+    print("Map is not solvable")
+    displayMap(map, result)
