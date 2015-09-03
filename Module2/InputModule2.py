@@ -1,6 +1,8 @@
 K = 4
+colors = {0: "BLUE", 1: "RED", 2: "GREEN", 3: "YELLOW", 4: "PURPLE"}
 
 from graphics import *
+
 
 class Node:
     def __init__(self, nr, xPos, yPos):
@@ -31,8 +33,8 @@ def create_csp(filename):
 
     file = open(filename)
     firstLine = file.readline().split(" ")
-    NV = int(firstLine[0]) # Number of vertices
-    NE = int(firstLine[1]) # Number of edges
+    NV = int(firstLine[0])  # Number of vertices
+    NE = int(firstLine[1])  # Number of edges
 
     # Add nodes to csp.variables
     for i in range(NV):
@@ -43,7 +45,7 @@ def create_csp(filename):
         csp.constraints[i] = []
 
     # Add neighbours to csp.constraints
-    for i in range(NE-1):
+    for i in range(NE):
         line = file.readline().split(" ")
         nodeNr0 = int(line[0])
         nodeNr1 = int(line[1])
@@ -56,13 +58,29 @@ def create_csp(filename):
 
     return csp
 
+
 def displayGraph(csp):
     win = GraphWin("CSP", 500, 500)
     for i in csp.variables:
+        # Draw edges
+        for neighbour in csp.constraints[i.id]:
+            line = Line(Point(i.xPos * 20, i.yPos * 20), Point(neighbour.xPos * 20, neighbour.yPos * 20))
+            line.draw(win)
+        # Draw nodes
         circle = Circle(Point(i.xPos * 20, i.yPos * 20), 5)
+        circle.setFill(colors[i.id % K])  # circle.setFill(colors[csp.domains[0]])
         circle.draw(win)
 
     win.getMouse()
     win.close()
 
-displayGraph(create_csp("graphTest.txt"))
+
+# func = makefunc(['x', 'y', 'z'], 'x + y < 2*z')
+def makefunc(var_names, expression, envir=globals()):
+    args = ""
+    for n in var_names: args = args + "," + n
+    return eval("(lambda " + args[1:] + ": " + expression + ")", envir)
+
+
+func = makefunc(['x', 'y'], 'x == Y')
+displayGraph(create_csp("graph1"))
