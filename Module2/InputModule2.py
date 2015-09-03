@@ -1,3 +1,5 @@
+from graphics import *
+
 class Node:
     def __init__(self, nr, xPos, yPos):
         self.id = nr
@@ -44,4 +46,13 @@ def create_csp(filename):
 
     return csp
 
-print(create_csp("graphTest.txt"))
+def displayGraph(csp):
+    win = GraphWin("CSP", 500, 500)
+    for i in csp.variables:
+        circle = Circle(Point(i.xPos * 20, i.yPos * 20), 5)
+        circle.draw(win)
+
+    win.getMouse()
+    win.close()
+
+displayGraph(create_csp("graphTest.txt"))
