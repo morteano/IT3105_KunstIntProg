@@ -32,12 +32,15 @@ def create_csp(filename):
 
     for i in range(NV):
         line = file.readline().split(" ")
-        node = Node(line[0], line[1], line[2])
+        node = Node(int(line[0]), int(line[1]), int(line[2]))
         csp.variables.append(node)
 
     for j in range(NE-1):
         line = file.readline().split(" ")
-
+        nodeNr0 = int(line[0])
+        nodeNr1 = int(line[1])
+        csp.constraints[nodeNr0] = csp.variables[nodeNr1]
+        csp.constraints[nodeNr1] = csp.variables[nodeNr0]
 
     return 0
 
