@@ -39,14 +39,16 @@ def create_csp(filename):
         line = file.readline().split(" ")
         node = Node(int(line[0]), float(line[1]), float(line[2]))
         csp.variables.append(node)
+        # Insert lists to the constraints dictionary
+        csp.constraints[i] = []
 
     # Add neighbours to csp.constraints
     for i in range(NE-1):
         line = file.readline().split(" ")
         nodeNr0 = int(line[0])
         nodeNr1 = int(line[1])
-        csp.constraints[nodeNr0] = csp.variables[nodeNr1]
-        csp.constraints[nodeNr1] = csp.variables[nodeNr0]
+        csp.constraints[nodeNr0].append(csp.variables[nodeNr1])
+        csp.constraints[nodeNr1].append(csp.variables[nodeNr0])
 
     # Add K elements as domain of the nodes
     for i in range(NV):
