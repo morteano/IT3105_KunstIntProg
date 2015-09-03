@@ -25,6 +25,18 @@ class CSP:
         # the variable pair (i, j)
         self.constraints = {}
 
+    def revise(self):
+        magic = True
+
+    def bestChoice(self):
+        return max(self.heuristic())
+
+    def heuristic(self):
+        h = 0
+        return h
+
+
+
 
 def create_csp(filename):
     """Instantiate a CSP representing the Sudoku board found in the text
@@ -84,5 +96,6 @@ def makefunc(var_names, expression, envir=globals()):
     return eval("(lambda " + args[1:] + ": " + expression + ")", envir)
 
 
-func = makefunc(['x', 'y'], 'x == Y')
+
+func = makefunc(['x', 'y'], 'x + y < 2*z')
 displayGraph(create_csp("graph1"))
