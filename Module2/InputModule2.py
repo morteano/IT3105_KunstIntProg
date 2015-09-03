@@ -1,5 +1,7 @@
+from Queue import Queue
+
 K = 4
-colors = {0: "BLUE", 1: "RED", 2: "GREEN", 3: "YELLOW", 4: "PURPLE"}
+colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
 
 from graphics import *
 
