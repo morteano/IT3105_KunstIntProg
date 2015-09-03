@@ -28,13 +28,6 @@ class CSP:
     def revise(self):
         magic = True
 
-    def bestChoice(self):
-        return max(self.heuristic())
-
-    def heuristic(self):
-        h = 0
-        return h
-
 
 
 
@@ -96,6 +89,18 @@ def makefunc(var_names, expression, envir=globals()):
     return eval("(lambda " + args[1:] + ": " + expression + ")", envir)
 
 
+# Finds the smallest domain
+def bestChoice(csp):
+    domainSize = len(csp.domains[0])
+    var = 0
+    for i in range(len(csp.variables)):
+        if domainSize > len(csp.domains[i]):
+            domainSize = len(csp.domains[i])
+            var = i
+    return var
+
 
 func = makefunc(['x', 'y'], 'x + y < 2*z')
-displayGraph(create_csp("graph1"))
+csp = create_csp("graph1")
+print(bestChoice(csp))
+displayGraph(csp)
