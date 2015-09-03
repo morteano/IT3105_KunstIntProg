@@ -100,7 +100,7 @@ def bestChoice(csp):
     return var
 
 
-func = makefunc(['x', 'y'], 'x + y < 2*z')
+func = makefunc(['x', 'y'], 'x < y')
 csp = create_csp("graph1")
 print(bestChoice(csp))
 displayGraph(csp)
