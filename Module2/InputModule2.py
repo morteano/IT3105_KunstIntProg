@@ -1,6 +1,6 @@
 from Queue import Queue
 
-K = 6
+K = 5
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
 
 from graphics import *
@@ -29,6 +29,8 @@ class CSP:
         # the variable pair (i, j)
         self.constraints = {}
 
+        self.queue = []
+
     def printConstraints(self, variable):
         for i in self.constraints[variable]:
             print(i.expression)
@@ -38,27 +40,50 @@ class CSP:
     def makefunc(self, varNames, expression, envir=globals()):
         args = ""
         for n in varNames: args = args + "," + n
-        print(eval("(lambda " + args[1:] + ": " + expression + ")", envir))
         return eval("(lambda " + args[1:] + ": " + expression + ")", envir)
 
     #not general yet, because it only works for constraints involving two variables,
     #need one extra for loop for each additional variable
-    def revise(self, variable):
-        for i in self.constraints[variable]:
-            variableTexts = []
-            variablesInvolved = i.variables
-            for j in variablesInvolved:
-                variableTexts.append(j.text)
+    def revise(self, variable, constraint):
+        modified = False
 
-            func = self.makefunc(variableTexts, i.expression)
+        variableTexts = []
+        variablesInvolved = constraint.variables
+        for j in variablesInvolved:
+            variableTexts.append(j.text)
 
-            if len(variablesInvolved) == 2:
-                for j in self.domains[variablesInvolved[0]]:
-                    for k in self.domains[variablesInvolved[1]]:
-                        if func(j, k):
-                            break
-                    else:
-                        self.domains[variable].remove(j)
+        func = self.makefunc(variableTexts, constraint.expression)
+
+        if len(variablesInvolved) == 2:
+            for j in self.domains[variablesInvolved[0]]:
+                for k in self.domains[variablesInvolved[1]]:
+                    if func(j, k):
+                        break
+                else:
+                    self.domains[variable].remove(j)
+                    modified = True
+        return modified
+
+    #initialize the queue containing variables and constraint pairs to filter variable domains
+    def initializeQueue(self):
+        for i in self.variables:
+            for j in self.constraints[i]:
+                self.queue.append((i, j))
+
+    #filter the variable domains until no more deductions can be made
+    def domainFilter(self):
+        while self.queue:
+            varConsTuple = self.queue.pop(0)
+            currentVariable = varConsTuple[0]
+            currentConstraint = varConsTuple[1]
+
+
+
+            if self.revise(currentVariable, currentConstraint):
+                for i in self.constraints[currentVariable]:
+                    if i != currentConstraint:
+                        self.queue.append((currentVariable, i))
+
 
 
 
@@ -103,22 +128,6 @@ def create_csp(filename):
     return csp
 
 
-def displayGraph(csp):
-    win = GraphWin("CSP", 600, 600)
-    for i in csp.variables:
-        # Draw edges
-        for neighbour in csp.constraints[i]:
-            line = Line(Point(i.xPos * 20, i.yPos * 20), Point(neighbour.variables[1].xPos * 20, neighbour.variables[1].yPos * 20))
-            line.draw(win)
-        # Draw nodes
-        circle = Circle(Point(i.xPos * 20, i.yPos * 20), 5)
-        circle.setFill(colors[i.id % K])  # circle.setFill(colors[csp.domains[0]])
-        circle.draw(win)
-
-    win.getMouse()
-    win.close()
-
-
 # Finds the smallest domain
 def bestChoice(csp):
     domainSize = len(csp.domains[0])
@@ -128,25 +137,44 @@ def bestChoice(csp):
             domainSize = len(csp.domains[i])
             var = i
     return var
+1
+csp = create_csp("graph1")
 
-csp = create_csp("graphTest.txt")
-#print(csp.variables)
-#print(csp.domains)
+csp.initializeQueue()
 
-for i in csp.variables:
-    print(csp.domains[i])
+csp.domains[csp.variables[1]] = ["blue"]
+csp.domains[csp.variables[2]] = ["red"]
+csp.domains[csp.variables[5]] = ["green", "red"]
+csp.domains[csp.variables[4]] = ["yellow"]
+csp.domains[csp.variables[9]] = ["purple"]
+csp.domains[csp.variables[7]] = ["green"]
+csp.domains[csp.variables[8]] = ["blue", "purple"]
 
-csp.domains[csp.variables[1]] = ['blue']
-csp.domains[csp.variables[2]] = ['red']
 
-csp.revise(csp.variables[0])
 
-for i in csp.variables:
-    print(csp.domains[i])
+
+
+def displayGraph(csp):
+    win = GraphWin("CSP", 650, 600)
+    for i in csp.variables:
+        # Draw edges
+        for neighbour in csp.constraints[i]:
+            line = Line(Point(i.xPos * 20 + 20, i.yPos * 20 + 20), Point(neighbour.variables[1].xPos * 20 + 20, neighbour.variables[1].yPos * 20 + 20))
+            line.draw(win)
+        # Draw nodes
+        circle = Circle(Point(i.xPos * 20 + 20, i.yPos * 20 + 20), 5)
+        if len(csp.domains[i]) == 1:
+            #for j in range(10):
+                #print(j, csp.domains[csp.variables[j]])
+            csp.domainFilter()
+
+            circle.setFill(csp.domains[i][0])  # circle.setFill(colors[csp.domains[0]])
+        circle.draw(win)
+
+    win.getMouse()
+    win.close()
 
 displayGraph(csp)
-
-
 
 
 
