@@ -1,7 +1,9 @@
 
-
-K = 4
+#TODO add more colors
+K = 5
 nodeDistance = 20
+shiftDistance = 20
+
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
 
 from graphics import *
@@ -161,29 +163,26 @@ def chooseBestChoice(csp):
 
 def displayGraph(csp):
     win = GraphWin("CSP", 650, 600)
+
     for i in csp.variables:
         # Draw edges
         for neighbour in csp.constraints[i]:
-            line = Line(Point(i.xPos * nodeDistance + 20, i.yPos * nodeDistance + 20), Point(neighbour.variables[1].xPos * nodeDistance + 20, neighbour.variables[1].yPos * nodeDistance + 20))
+            line = Line(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), Point(neighbour.variables[1].xPos * nodeDistance + shiftDistance, neighbour.variables[1].yPos * nodeDistance + shiftDistance))
             line.draw(win)
         # Draw nodes
-        circle = Circle(Point(i.xPos * nodeDistance + 20, i.yPos * nodeDistance + 20), 5)
+        circle = Circle(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), 5)
         if len(csp.domains[i]) == 1:
-            #for j in range(10):
-                #print(j, csp.domains[csp.variables[j]])
             csp.domainFilter()
-
             circle.setFill(csp.domains[i][0])  # circle.setFill(colors[csp.domains[0]])
         circle.draw(win)
 
     win.getMouse()
     win.close()
 
-
 csp = create_csp("graph1")
 
-#csp.initializeQueue()
-#csp.domainFilter()
+csp.initializeQueue()
+csp.domainFilter()
 """
 csp.domains[csp.variables[1]] = ["blue"]
 csp.domains[csp.variables[2]] = ["red"]
@@ -193,10 +192,14 @@ csp.domains[csp.variables[9]] = ["purple"]
 csp.domains[csp.variables[7]] = ["green"]
 csp.domains[csp.variables[8]] = ["blue", "purple"]"""
 
-for i in range(36):
+for i in range(50):
     var = chooseBestChoice(csp)
+
+
     csp.rerun(csp.variables[var])
     csp.domainFilter()
+
+
 
 
 displayGraph(csp)
