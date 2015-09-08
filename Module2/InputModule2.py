@@ -1,7 +1,7 @@
 
 
 K = 4
-nodeDistance = 1
+nodeDistance = 20
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
 
 from graphics import *
@@ -154,10 +154,10 @@ def displayGraph(csp):
     for i in csp.variables:
         # Draw edges
         for neighbour in csp.constraints[i]:
-            line = Line(Point(i.xPos * 20 + 20, i.yPos * 20 + 20), Point(neighbour.variables[1].xPos * 20 + 20, neighbour.variables[1].yPos * 20 + 20))
+            line = Line(Point(i.xPos * nodeDistance + 20, i.yPos * nodeDistance + 20), Point(neighbour.variables[1].xPos * nodeDistance + 20, neighbour.variables[1].yPos * nodeDistance + 20))
             line.draw(win)
         # Draw nodes
-        circle = Circle(Point(i.xPos * 20 + 20, i.yPos * 20 + 20), 5)
+        circle = Circle(Point(i.xPos * nodeDistance + 20, i.yPos * nodeDistance + 20), 5)
         if len(csp.domains[i]) == 1:
             #for j in range(10):
                 #print(j, csp.domains[csp.variables[j]])
