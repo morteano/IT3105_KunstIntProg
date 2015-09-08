@@ -10,6 +10,10 @@ class Constraint:
         self.variables = varList
         self.expression = expression
 
+    def contains(self, variable):
+        if variable in self.variables:
+            return True
+        return False
 
 
 
