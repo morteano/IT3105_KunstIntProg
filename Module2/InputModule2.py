@@ -6,6 +6,7 @@ colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"
 
 from graphics import *
 from Constraint import *
+from random import randint
 
 
 class Node:
@@ -149,6 +150,15 @@ def bestChoice(csp):
     return var
 
 
+# Choose a value for the best chose of variable
+def chooseBestChoice(csp):
+    var = bestChoice(csp)
+    index = randint(0, len(csp.domains[csp.variables[var]])-1)
+    csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][index]]
+    return var
+
+
+
 def displayGraph(csp):
     win = GraphWin("CSP", 650, 600)
     for i in csp.variables:
@@ -184,15 +194,9 @@ csp.domains[csp.variables[7]] = ["green"]
 csp.domains[csp.variables[8]] = ["blue", "purple"]"""
 
 for i in range(36):
-    var = bestChoice(csp)
-    print(var, csp.domains[csp.variables[var]])
-    csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][0]]
-    print(var, csp.domains[csp.variables[var]])
-
+    var = chooseBestChoice(csp)
     csp.rerun(csp.variables[var])
     csp.domainFilter()
-
-
 
 
 displayGraph(csp)
