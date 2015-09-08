@@ -87,9 +87,12 @@ class CSP:
 
     def rerun(self, variable):
         for i in self.constraints[variable]:
-            for j in i.variables:
-                if j != variable:
-                    self.queue.append((i.variables[j], i))
+            for j in range(len(i.variables)):
+                if i.variables[j] != variable:
+                    i.variables[j], i.variables[0] = i.variables[0], i.variables[j]
+                    self.queue.append((i.variables[0], i))
+
+
 
 
 
@@ -136,7 +139,7 @@ def create_csp(filename):
 
 # Finds the smallest domain
 def bestChoice(csp):
-    domainSize = K
+    domainSize = K + 1
     var = 0
     for i in csp.variables:
         if domainSize > len(csp.domains[i]) > 1:
@@ -168,21 +171,22 @@ def displayGraph(csp):
 
 csp = create_csp("graph1")
 
-csp.initializeQueue()
-
+#csp.initializeQueue()
+#csp.domainFilter()
+"""
 csp.domains[csp.variables[1]] = ["blue"]
 csp.domains[csp.variables[2]] = ["red"]
 csp.domains[csp.variables[5]] = ["green", "red"]
 csp.domains[csp.variables[4]] = ["yellow"]
 csp.domains[csp.variables[9]] = ["purple"]
 csp.domains[csp.variables[7]] = ["green"]
-csp.domains[csp.variables[8]] = ["blue", "purple"]
+csp.domains[csp.variables[8]] = ["blue", "purple"]"""
 
-for i in range(20):
+for i in range(36):
     var = bestChoice(csp)
-    print(csp.domains[csp.variables[var]])
+    print(var, csp.domains[csp.variables[var]])
     csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][0]]
-    print(csp.domains[csp.variables[var]])
+    print(var, csp.domains[csp.variables[var]])
 
     csp.rerun(csp.variables[var])
     csp.domainFilter()
