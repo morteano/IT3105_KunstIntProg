@@ -6,6 +6,7 @@ colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"
 
 from graphics import *
 from Constraint import *
+import random
 
 
 class Node:
@@ -93,9 +94,6 @@ class CSP:
                     self.queue.append((i.variables[0], i))
 
 
-
-
-
 def create_csp(filename):
     """Instantiate a CSP representing the Sudoku board found in the text
     file named 'filename' in the current directory.
@@ -148,6 +146,13 @@ def bestChoice(csp):
     return var
 
 
+def chooseBestChoice(csp):
+    var = bestChoice(csp)
+    index = 0 #random.randint(0, len(csp.domains[csp.variables[var]])-1)
+    csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][index]]
+    return var
+
+
 def displayGraph(csp):
     win = GraphWin("CSP", 650, 600)
     for i in csp.variables:
@@ -158,10 +163,6 @@ def displayGraph(csp):
         # Draw nodes
         circle = Circle(Point(i.xPos * 20 + 20, i.yPos * 20 + 20), 5)
         if len(csp.domains[i]) == 1:
-            #for j in range(10):
-                #print(j, csp.domains[csp.variables[j]])
-            csp.domainFilter()
-
             circle.setFill(csp.domains[i][0])  # circle.setFill(colors[csp.domains[0]])
         circle.draw(win)
 
@@ -182,12 +183,8 @@ csp.domains[csp.variables[9]] = ["purple"]
 csp.domains[csp.variables[7]] = ["green"]
 csp.domains[csp.variables[8]] = ["blue", "purple"]"""
 
-for i in range(36):
-    var = bestChoice(csp)
-    print(var, csp.domains[csp.variables[var]])
-    csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][0]]
-    print(var, csp.domains[csp.variables[var]])
-
+for i in range(10):
+    var = chooseBestChoice(csp)
     csp.rerun(csp.variables[var])
     csp.domainFilter()
 
@@ -195,6 +192,7 @@ for i in range(36):
 
 
 displayGraph(csp)
+
 
 
 
