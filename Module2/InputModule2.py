@@ -84,8 +84,11 @@ class CSP:
                     if i != currentConstraint:
                         self.queue.append((currentVariable, i))
 
-
-
+    def rerun(self, variable):
+        for i in self.constraints[variable]:
+            for j in i.variables:
+                if j != variable:
+                    self.queue.append((i.variables[j], i))
 
 def create_csp(filename):
     """Instantiate a CSP representing the Sudoku board found in the text
@@ -132,7 +135,7 @@ def create_csp(filename):
 def bestChoice(csp):
     domainSize = len(csp.domains[0])
     var = 0
-    for i in range(len(csp.variables)):
+    for i in csp.variables:
         if domainSize > len(csp.domains[i]):
             domainSize = len(csp.domains[i])
             var = i
