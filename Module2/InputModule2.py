@@ -1,4 +1,4 @@
-from Queue import Queue
+
 
 K = 5
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
