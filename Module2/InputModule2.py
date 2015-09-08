@@ -1,6 +1,7 @@
 
 
 K = 5
+nodeDistance = 1
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
 
 from graphics import *
@@ -90,6 +91,8 @@ class CSP:
                 if j != variable:
                     self.queue.append((i.variables[j], i))
 
+
+
 def create_csp(filename):
     """Instantiate a CSP representing the Sudoku board found in the text
     file named 'filename' in the current directory.
@@ -133,28 +136,13 @@ def create_csp(filename):
 
 # Finds the smallest domain
 def bestChoice(csp):
-    domainSize = len(csp.domains[0])
+    domainSize = K
     var = 0
     for i in csp.variables:
-        if domainSize > len(csp.domains[i]):
+        if domainSize > len(csp.domains[i]) > 1:
             domainSize = len(csp.domains[i])
-            var = i
+            var = i.id
     return var
-1
-csp = create_csp("graph1")
-
-csp.initializeQueue()
-
-csp.domains[csp.variables[1]] = ["blue"]
-csp.domains[csp.variables[2]] = ["red"]
-csp.domains[csp.variables[5]] = ["green", "red"]
-csp.domains[csp.variables[4]] = ["yellow"]
-csp.domains[csp.variables[9]] = ["purple"]
-csp.domains[csp.variables[7]] = ["green"]
-csp.domains[csp.variables[8]] = ["blue", "purple"]
-
-
-
 
 
 def displayGraph(csp):
@@ -176,6 +164,31 @@ def displayGraph(csp):
 
     win.getMouse()
     win.close()
+
+
+csp = create_csp("graph1")
+
+csp.initializeQueue()
+
+csp.domains[csp.variables[1]] = ["blue"]
+csp.domains[csp.variables[2]] = ["red"]
+csp.domains[csp.variables[5]] = ["green", "red"]
+csp.domains[csp.variables[4]] = ["yellow"]
+csp.domains[csp.variables[9]] = ["purple"]
+csp.domains[csp.variables[7]] = ["green"]
+csp.domains[csp.variables[8]] = ["blue", "purple"]
+
+for i in range(20):
+    var = bestChoice(csp)
+    print(csp.domains[csp.variables[var]])
+    csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][0]]
+    print(csp.domains[csp.variables[var]])
+
+    csp.rerun(csp.variables[var])
+    csp.domainFilter()
+
+
+
 
 displayGraph(csp)
 
