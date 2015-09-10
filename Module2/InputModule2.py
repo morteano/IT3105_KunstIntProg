@@ -1,8 +1,8 @@
 
 #TODO add more colors
 K = 4
-nodeDistance = 20
-shiftDistance = 20
+nodeDistance = .05
+shiftDistance = 0
 deadEnd = False
 
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
@@ -150,11 +150,11 @@ def create_csp(filename):
 # Finds the smallest domain
 def bestChoice(csp):
     domainSize = K + 1
-    var = 0
+    var = csp.variables[0]
     for i in csp.variables:
         if domainSize > len(csp.domains[i]) > 1:
             domainSize = len(csp.domains[i])
-            var = i.id
+            var = i
     return var
 
 
@@ -162,9 +162,13 @@ def bestChoice(csp):
 def chooseBestChoice(csp):
     oldCsp = deepcopy(csp)
     var = bestChoice(csp)
-    index = randint(0, len(csp.domains[csp.variables[var]])-1)
-    csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][index]]
-    return var, oldCsp, index
+
+    #old variables in old csp which corresponds to new variable in new csp
+    oldVar = oldCsp.variables[var.id]
+
+    index = randint(0, len(csp.domains[var])-1)
+    csp.domains[var] = [csp.domains[var][index]]
+    return var, oldVar, oldCsp, index
 
 
 
@@ -186,7 +190,7 @@ def displayGraph(csp):
     win.getMouse()
     win.close()
 
-csp = create_csp("graph1")
+csp = create_csp("graph6")
 
 csp.initializeQueue()
 csp.domainFilter()
@@ -201,16 +205,23 @@ csp.domains[csp.variables[8]] = ["blue", "purple"]"""
 
 
 oldCsps = []
-for i in range(100):
-    var, oldCsp, index = chooseBestChoice(csp)
+#IT WORKS!
+#solving graph 6 takes about 30-40 seconds
+for i in range(500):
+    var, oldVar, oldCsp, index = chooseBestChoice(csp)
+
+    #var and old var are different node instances since they represent the same node but in different csps,
+    #thats why we got the KeyError since we tried to reference var in old csp with the same var in new csp
+
+    #add old csp to previos csps list
     oldCsps.append(oldCsp)
 
-    csp.rerun(csp.variables[var])
+    #reduce the same domain of the old csp as the domain to the variable we chose in new csp
+    oldCsp.domains[oldVar].pop(index)
+    csp.rerun(var)
     csp.domainFilter()
     if deadEnd == True:
-        print("Dead end!!!")
         csp = oldCsps.pop()
-        csp.domains[csp.variables[var]].pop(index)
         deadEnd = False
 
         csp.domainFilter()
