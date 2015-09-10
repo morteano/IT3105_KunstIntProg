@@ -162,9 +162,9 @@ def bestChoice(csp):
 def chooseBestChoice(csp):
     oldCsp = deepcopy(csp)
     var = bestChoice(csp)
-    index = 0 #randint(0, len(csp.domains[csp.variables[var]])-1)
+    index = randint(0, len(csp.domains[csp.variables[var]])-1)
     csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][index]]
-    return var, oldCsp
+    return var, oldCsp, index
 
 
 
@@ -201,8 +201,8 @@ csp.domains[csp.variables[8]] = ["blue", "purple"]"""
 
 
 oldCsps = []
-for i in range(500):
-    var, oldCsp = chooseBestChoice(csp)
+for i in range(100):
+    var, oldCsp, index = chooseBestChoice(csp)
     oldCsps.append(oldCsp)
 
     csp.rerun(csp.variables[var])
@@ -210,11 +210,10 @@ for i in range(500):
     if deadEnd == True:
         print("Dead end!!!")
         csp = oldCsps.pop()
+        csp.domains[csp.variables[var]].pop(index)
         deadEnd = False
-        csp.domains[csp.variables[var]].pop(0)
 
-
-
+        csp.domainFilter()
 
 displayGraph(csp)
 
