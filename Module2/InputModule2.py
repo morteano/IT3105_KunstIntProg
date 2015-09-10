@@ -1,14 +1,16 @@
 
 #TODO add more colors
-K = 5
+K = 4
 nodeDistance = 20
 shiftDistance = 20
+deadEnd = False
 
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
 
 from graphics import *
 from Constraint import *
 from random import randint
+from copy import deepcopy
 
 
 class Node:
@@ -65,6 +67,10 @@ class CSP:
                         break
                 else:
                     self.domains[variable].remove(j)
+                    if len(self.domains[variable]) == 0:
+                        global deadEnd
+                        deadEnd = True
+                        break
                     modified = True
         return modified
 
@@ -154,10 +160,11 @@ def bestChoice(csp):
 
 # Choose a value for the best chose of variable
 def chooseBestChoice(csp):
+    oldCsp = deepcopy(csp)
     var = bestChoice(csp)
-    index = randint(0, len(csp.domains[csp.variables[var]])-1)
+    index = 0 #randint(0, len(csp.domains[csp.variables[var]])-1)
     csp.domains[csp.variables[var]] = [csp.domains[csp.variables[var]][index]]
-    return var
+    return var, oldCsp
 
 
 
@@ -192,12 +199,19 @@ csp.domains[csp.variables[9]] = ["purple"]
 csp.domains[csp.variables[7]] = ["green"]
 csp.domains[csp.variables[8]] = ["blue", "purple"]"""
 
-for i in range(50):
-    var = chooseBestChoice(csp)
 
+oldCsps = []
+for i in range(500):
+    var, oldCsp = chooseBestChoice(csp)
+    oldCsps.append(oldCsp)
 
     csp.rerun(csp.variables[var])
     csp.domainFilter()
+    if deadEnd == True:
+        print("Dead end!!!")
+        csp = oldCsps.pop()
+        deadEnd = False
+        csp.domains[csp.variables[var]].pop(0)
 
 
 
