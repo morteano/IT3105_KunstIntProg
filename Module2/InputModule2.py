@@ -1,17 +1,16 @@
 
 #TODO add more colors
-K = 4
-nodeDistance = .05
-shiftDistance = 0
-deadEnd = False
 
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
+
+currentNumColors = {"blue": 0, "red": 0, "green": 0, "yellow": 0, "purple": 0, "orange": 0}
 
 from graphics import *
 from Constraint import *
 from random import randint
 from copy import deepcopy
 
+deadEnd = False
 
 class Node:
     def __init__(self, nr, xPos, yPos):
@@ -106,7 +105,7 @@ class CSP:
 
 
 
-def create_csp(filename):
+def create_csp(filename, numColors):
     """Instantiate a CSP representing the Sudoku board found in the text
     file named 'filename' in the current directory.
     """
@@ -142,14 +141,14 @@ def create_csp(filename):
     # Add K elements as domain of the nodes
     for i in csp.variables:
         csp.domains[i] = []
-        for j in range(K):
+        for j in range(numColors):
             csp.domains[i].append(colors[j])
-    return csp
+    return csp, NV
 
 
 # Finds the smallest domain
-def bestChoice(csp):
-    domainSize = K + 1
+def bestChoice(csp, numColors):
+    domainSize = numColors + 1
     var = csp.variables[0]
     for i in csp.variables:
         if domainSize > len(csp.domains[i]) > 1:
@@ -159,20 +158,25 @@ def bestChoice(csp):
 
 
 # Choose a value for the best chose of variable
-def chooseBestChoice(csp):
+def chooseBestChoice(csp, numColors):
     oldCsp = deepcopy(csp)
-    var = bestChoice(csp)
-
+    var = bestChoice(csp, numColors)
+    index = 0
     #old variables in old csp which corresponds to new variable in new csp
     oldVar = oldCsp.variables[var.id]
-
-    index = randint(0, len(csp.domains[var])-1)
+    max = csp.domains[var][0]
+    for i in csp.domains[var]:
+        if currentNumColors[i] > currentNumColors[max]:
+            index = csp.domains[var].index(i)
+            max = i
+    currentNumColors[max] += 1
+    #index = randint(0, len(csp.domains[var]) - 1)
     csp.domains[var] = [csp.domains[var][index]]
     return var, oldVar, oldCsp, index
 
 
 
-def displayGraph(csp):
+def displayGraph(csp, nodeDistance, shiftDistance):
     win = GraphWin("CSP", 650, 600)
 
     for i in csp.variables:
@@ -190,46 +194,51 @@ def displayGraph(csp):
     win.getMouse()
     win.close()
 
-csp = create_csp("graph6")
+def solveGraph(graph, numColors, nodeDistance, shiftDistance):
+    csp, numNodes = create_csp(graph, numColors)
 
-csp.initializeQueue()
-csp.domainFilter()
-"""
-csp.domains[csp.variables[1]] = ["blue"]
-csp.domains[csp.variables[2]] = ["red"]
-csp.domains[csp.variables[5]] = ["green", "red"]
-csp.domains[csp.variables[4]] = ["yellow"]
-csp.domains[csp.variables[9]] = ["purple"]
-csp.domains[csp.variables[7]] = ["green"]
-csp.domains[csp.variables[8]] = ["blue", "purple"]"""
-
-
-oldCsps = []
-#IT WORKS!
-#solving graph 6 takes about 30-40 seconds
-for i in range(500):
-    var, oldVar, oldCsp, index = chooseBestChoice(csp)
-
-    #var and old var are different node instances since they represent the same node but in different csps,
-    #thats why we got the KeyError since we tried to reference var in old csp with the same var in new csp
-
-    #add old csp to previos csps list
-    oldCsps.append(oldCsp)
-
-    #reduce the same domain of the old csp as the domain to the variable we chose in new csp
-    oldCsp.domains[oldVar].pop(index)
-    csp.rerun(var)
+    csp.initializeQueue()
     csp.domainFilter()
-    if deadEnd == True:
-        csp = oldCsps.pop()
-        deadEnd = False
 
+    oldCsps = []
+
+    counter = 0
+    #IT WORKS!
+    #solving graph 6 takes about 30-40 seconds
+    while counter < numNodes:
+    #for i in range(500):
+        var, oldVar, oldCsp, index = chooseBestChoice(csp, numColors)
+
+        #var and old var are different node instances since they represent the same node but in different csps,
+        #thats why we got the KeyError since we tried to reference var in old csp with the same var in new csp
+
+        #add old csp to previos csps list
+        oldCsps.append(oldCsp)
+
+        #reduce the same domain of the old csp as the domain to the variable we chose in new csp
+        oldCsp.domains[oldVar].pop(index)
+        counter += 1
+        csp.rerun(var)
         csp.domainFilter()
+        global deadEnd
+        if deadEnd == True:
+            csp = oldCsps.pop()
+            deadEnd = False
+            counter -= 1
+            csp.domainFilter()
 
-displayGraph(csp)
+    displayGraph(csp, nodeDistance, shiftDistance)
 
 
+def run():
+    graph = raw_input("Graph name: ")
+    numColors = raw_input("Number of colors: ")
+    nodeDistance = raw_input("Distance between nodes: ")
+    shiftDistance = raw_input("Distance to shift all nodes: ")
 
+    solveGraph(graph, int(numColors), float(nodeDistance), int(shiftDistance))
+
+run()
 
 
 
