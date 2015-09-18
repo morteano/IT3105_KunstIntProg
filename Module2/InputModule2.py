@@ -1,16 +1,11 @@
-
-#TODO add more colors
+import time
+import heapq
 
 colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
 
-currentNumColors = {"blue": 0, "red": 0, "green": 0, "yellow": 0, "purple": 0, "orange": 0}
-
 from graphics import *
 from Constraint import *
-from random import randint
 from copy import deepcopy
-
-deadEnd = False
 
 class Node:
     def __init__(self, nr, xPos, yPos):
@@ -21,6 +16,18 @@ class Node:
         #textual representation of node, used for the general makefunc function
         self.text = 'n' + str(nr)
 
+class HeapQueue: #Priority queue with heap as data structure
+	def __init__(self):
+		self.elements = []
+
+	def empty(self):
+		return len(self.elements) == 0
+
+	def put(self, item, priority): #adds element to the heap
+		heapq.heappush(self.elements, (priority, item))
+
+	def get(self): #returns the element with lowest value and removes it from the heap
+		return heapq.heappop(self.elements)[1]
 
 class CSP:
     def __init__(self):
@@ -66,10 +73,6 @@ class CSP:
                         break
                 else:
                     self.domains[variable].remove(j)
-                    if len(self.domains[variable]) == 0:
-                        global deadEnd
-                        deadEnd = True
-                        break
                     modified = True
         return modified
 
@@ -101,6 +104,11 @@ class CSP:
                         if k.contains(variable):
                             self.queue.append((i.variables[j], k))
 
+    def isSolved(self):
+        for i in self.variables:
+            if len(self.domains[i]) != 1:
+                return False
+        return True
 
 
 
@@ -157,24 +165,6 @@ def bestChoice(csp, numColors):
     return var
 
 
-# Choose a value for the best chose of variable
-def chooseBestChoice(csp, numColors):
-    oldCsp = deepcopy(csp)
-    var = bestChoice(csp, numColors)
-    index = 0
-    #old variables in old csp which corresponds to new variable in new csp
-    oldVar = oldCsp.variables[var.id]
-    max = csp.domains[var][0]
-    for i in csp.domains[var]:
-        if currentNumColors[i] > currentNumColors[max]:
-            index = csp.domains[var].index(i)
-            max = i
-    currentNumColors[max] += 1
-    #index = randint(0, len(csp.domains[var]) - 1)
-    csp.domains[var] = [csp.domains[var][index]]
-    return var, oldVar, oldCsp, index
-
-
 
 def displayGraph(csp, nodeDistance, shiftDistance):
     win = GraphWin("CSP", 650, 600)
@@ -194,40 +184,69 @@ def displayGraph(csp, nodeDistance, shiftDistance):
     win.getMouse()
     win.close()
 
+def heuristic(csp):
+    value = len(csp.variables)
+    for i in csp.variables:
+        if len(csp.domains[i]) == 1:
+            value -= 1
+        if len(csp.domains[i]) == 0:
+            value += len(csp.variables)
+    return value
+
 def solveGraph(graph, numColors, nodeDistance, shiftDistance):
     csp, numNodes = create_csp(graph, numColors)
 
     csp.initializeQueue()
-    csp.domainFilter()
 
-    oldCsps = []
+    openCsps = HeapQueue()
 
-    counter = 0
-    #IT WORKS!
-    #solving graph 6 takes about 30-40 seconds
-    while counter < numNodes:
+    closedCsps = []
+
+    openCsps.put(csp, heuristic(csp))
+
+    graphicCircles = []
+
+    win = GraphWin("CSP", 650, 600)
+
+    for i in csp.variables:
+        # Draw edges
+        for neighbour in csp.constraints[i]:
+            line = Line(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), Point(neighbour.variables[1].xPos * nodeDistance + shiftDistance, neighbour.variables[1].yPos * nodeDistance + shiftDistance))
+            line.draw(win)
+        # Draw nodes
+        circle = Circle(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), 5)
+        graphicCircles.append(circle)
+        circle.draw(win)
+
+    while not openCsps.empty():
     #for i in range(500):
-        var, oldVar, oldCsp, index = chooseBestChoice(csp, numColors)
+        currentCsp = openCsps.get()
 
-        #var and old var are different node instances since they represent the same node but in different csps,
-        #thats why we got the KeyError since we tried to reference var in old csp with the same var in new csp
 
-        #add old csp to previos csps list
-        oldCsps.append(oldCsp)
 
-        #reduce the same domain of the old csp as the domain to the variable we chose in new csp
-        oldCsp.domains[oldVar].pop(index)
-        counter += 1
-        csp.rerun(var)
-        csp.domainFilter()
-        global deadEnd
-        if deadEnd == True:
-            csp = oldCsps.pop()
-            deadEnd = False
-            counter -= 1
-            csp.domainFilter()
+        if currentCsp.isSolved():
+            break
 
-    displayGraph(csp, nodeDistance, shiftDistance)
+        tempVar = bestChoice(currentCsp, numColors)
+
+        for i in range(len(currentCsp.domains[tempVar])):
+            nextCsp = deepcopy(currentCsp)
+            nextVar = bestChoice(nextCsp, numColors)
+            nextCsp.domains[nextVar] = [nextCsp.domains[nextVar][i]]
+            nextCsp.rerun(nextVar)
+            nextCsp.domainFilter()
+
+            openCsps.put(nextCsp, heuristic(nextCsp))
+
+        for i in currentCsp.variables:
+            if len(currentCsp.domains[i]) == 1:
+                graphicCircles[i.id].setFill(currentCsp.domains[i][0])
+
+
+    print("YAY")
+    win.getMouse()
+    win.close()
+    #displayGraph(csp, nodeDistance, shiftDistance)
 
 
 def run():
@@ -239,8 +258,3 @@ def run():
     solveGraph(graph, int(numColors), float(nodeDistance), int(shiftDistance))
 
 run()
-
-
-
-
-
