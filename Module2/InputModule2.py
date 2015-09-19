@@ -31,7 +31,7 @@ class HeapQueue: #Priority queue with heap as data structure
 
 class CSP:
     def __init__(self):
-        # self.variables is a list of the variable names in the CSP
+        # self.variables is a list of the variables in the CSP
         self.variables = []
 
         # self.domains[i] is a list of legal values for variable i
@@ -42,6 +42,10 @@ class CSP:
         self.constraints = {}
 
         self.queue = []
+
+        #keeps track of how many nodes that have only one value in their domain,
+        #when this reaches the amount of nodes, the csp is solved
+        self.progress = 0
 
     def printConstraints(self, variable):
         for i in self.constraints[variable]:
@@ -73,6 +77,8 @@ class CSP:
                         break
                 else:
                     self.domains[variable].remove(j)
+                    if len(self.domains[variable]) == 1:
+                        self.progress += 1
                     modified = True
         return modified
 
@@ -89,8 +95,6 @@ class CSP:
             currentVariable = varConsTuple[0]
             currentConstraint = varConsTuple[1]
 
-
-
             if self.revise(currentVariable, currentConstraint):
                 for i in self.constraints[currentVariable]:
                     if i != currentConstraint:
@@ -105,10 +109,9 @@ class CSP:
                             self.queue.append((i.variables[j], k))
 
     def isSolved(self):
-        for i in self.variables:
-            if len(self.domains[i]) != 1:
-                return False
-        return True
+        if self.progress >= len(self.variables):
+            return True
+        return False
 
 
 
@@ -118,7 +121,6 @@ def create_csp(filename, numColors):
     file named 'filename' in the current directory.
     """
     csp = CSP()
-    #board = map(lambda x: x.strip(" "), open(filename, 'r'))
 
     file = open(filename)
     firstLine = file.readline().split(" ")
@@ -151,7 +153,7 @@ def create_csp(filename, numColors):
         csp.domains[i] = []
         for j in range(numColors):
             csp.domains[i].append(colors[j])
-    return csp, NV
+    return csp
 
 
 # Finds the smallest domain
@@ -165,25 +167,6 @@ def bestChoice(csp, numColors):
     return var
 
 
-
-def displayGraph(csp, nodeDistance, shiftDistance):
-    win = GraphWin("CSP", 650, 600)
-
-    for i in csp.variables:
-        # Draw edges
-        for neighbour in csp.constraints[i]:
-            line = Line(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), Point(neighbour.variables[1].xPos * nodeDistance + shiftDistance, neighbour.variables[1].yPos * nodeDistance + shiftDistance))
-            line.draw(win)
-        # Draw nodes
-        circle = Circle(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), 5)
-        if len(csp.domains[i]) == 1:
-            csp.domainFilter()
-            circle.setFill(csp.domains[i][0])  # circle.setFill(colors[csp.domains[0]])
-        circle.draw(win)
-
-    win.getMouse()
-    win.close()
-
 def heuristic(csp):
     value = len(csp.variables)
     for i in csp.variables:
@@ -194,59 +177,114 @@ def heuristic(csp):
     return value
 
 def solveGraph(graph, numColors, nodeDistance, shiftDistance):
-    csp, numNodes = create_csp(graph, numColors)
+    startCsp = create_csp(graph, numColors)
 
-    csp.initializeQueue()
+    #is the solved csp
+    resultCsp = startCsp
 
+    numNodesInTree = 1
+
+    numPoppedNodes = 0
+
+    cameFrom = {}
+
+    startCsp.initializeQueue()
+
+    #priority queue containing csps
     openCsps = HeapQueue()
 
-    closedCsps = []
+    openCsps.put(startCsp, heuristic(startCsp))
 
-    openCsps.put(csp, heuristic(csp))
-
+    #keeps track of graphical circles and what color they have
     graphicCircles = []
 
     win = GraphWin("CSP", 650, 600)
 
-    for i in csp.variables:
+    for i in startCsp.variables:
         # Draw edges
-        for neighbour in csp.constraints[i]:
+        for neighbour in startCsp.constraints[i]:
             line = Line(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), Point(neighbour.variables[1].xPos * nodeDistance + shiftDistance, neighbour.variables[1].yPos * nodeDistance + shiftDistance))
             line.draw(win)
         # Draw nodes
         circle = Circle(Point(i.xPos * nodeDistance + shiftDistance, i.yPos * nodeDistance + shiftDistance), 5)
-        graphicCircles.append(circle)
+        graphicCircles.append([circle, "white"])
         circle.draw(win)
 
-    while not openCsps.empty():
-    #for i in range(500):
+    while True:
         currentCsp = openCsps.get()
 
+        numPoppedNodes += 1
 
+        #color vertices that only has one value in their domain
+        for i in currentCsp.variables:
+            if len(currentCsp.domains[i]) == 1:
+                color = currentCsp.domains[i][0]
+                if graphicCircles[i.id][1] != color:
+                    graphicCircles[i.id][0].setFill(color)
+                    graphicCircles[i.id][1] = color
 
         if currentCsp.isSolved():
+            resultCsp = currentCsp
             break
 
+        #add all neighbour csps to the priority queue
+        #every neighbour to the current csp contains a different color of tempVar
         tempVar = bestChoice(currentCsp, numColors)
-
         for i in range(len(currentCsp.domains[tempVar])):
             nextCsp = deepcopy(currentCsp)
+
             nextVar = bestChoice(nextCsp, numColors)
             nextCsp.domains[nextVar] = [nextCsp.domains[nextVar][i]]
+            nextCsp.progress += 1
             nextCsp.rerun(nextVar)
             nextCsp.domainFilter()
 
+            numNodesInTree += 1
+
+            cameFrom[nextCsp] = currentCsp
             openCsps.put(nextCsp, heuristic(nextCsp))
 
-        for i in currentCsp.variables:
-            if len(currentCsp.domains[i]) == 1:
-                graphicCircles[i.id].setFill(currentCsp.domains[i][0])
 
+    #messy way of finding number of unsatisfied constraints. Should be 0
+    numUnsatisfiedConstraints = 0
+    for i in resultCsp.variables:
+        for j in resultCsp.constraints[i]:
 
-    print("YAY")
+            variableTexts = []
+            variablesInvolved = j.variables
+            for k in variablesInvolved:
+                variableTexts.append(k.text)
+
+            func = resultCsp.makefunc(variableTexts, j.expression)
+
+            if len(variablesInvolved) == 2:
+                for l in resultCsp.domains[variablesInvolved[0]]:
+                    for m in resultCsp.domains[variablesInvolved[1]]:
+                        if not func(l, m):
+                            numUnsatisfiedConstraints += 1
+
+    #check how many uncolored vertices there are. Should be 0
+    numUncoloredCircles = 0
+    for i in resultCsp.variables:
+        if graphicCircles[i.id][1] == "white":
+            numUncoloredCircles += 1
+
+    #find length of path from start to goal,
+    #for some reason it always return numPoppedNodes - 1
+    current = resultCsp
+    pathLength = 0
+    while current != startCsp:
+        current = cameFrom[current]
+        pathLength += 1
+
+    print("Number of unsatisfied constraints: " + str(numUnsatisfiedConstraints))
+    print("Number of uncolored vertices: " + str(numUncoloredCircles))
+    print("Number of nodes in search tree: " + str(numNodesInTree))
+    print("Number of nodes popped from agenda: " + str(numPoppedNodes))
+    print("Length of path from root csp to solved csp: " + str(pathLength))
+
     win.getMouse()
     win.close()
-    #displayGraph(csp, nodeDistance, shiftDistance)
 
 
 def run():
