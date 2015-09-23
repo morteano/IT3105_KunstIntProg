@@ -38,16 +38,16 @@ class CSP:
             variableTexts.append(j.text)
 
         func = self.makefunc(variableTexts, constraint.expression)
-
+        test = []
         if len(variablesInvolved) == 1:
             for j in self.domains[variablesInvolved[0]]:
-                if func(j):
-                    break
-            else:
+                if not func(j):
+                    test.append(j)
+                    if len(self.domains[variable]) == 1:
+                        self.progress += 1
+                    modified = True
+            for j in test:
                 self.domains[variable].remove(j)
-                if len(self.domains[variable]) == 1:
-                    self.progress += 1
-                modified = True
 
         elif len(variablesInvolved) == 2:
             for j in self.domains[variablesInvolved[0]]:
@@ -55,10 +55,12 @@ class CSP:
                     if func(j, k):
                         break
                 else:
-                    self.domains[variable].remove(j)
+                    test.append(j)
                     if len(self.domains[variable]) == 1:
                         self.progress += 1
                     modified = True
+            for j in test:
+                self.domains[variable].remove(j)
         return modified
 
     #initialize the queue containing variables and constraint pairs to filter variable domains
