@@ -39,7 +39,17 @@ class CSP:
 
         func = self.makefunc(variableTexts, constraint.expression)
 
-        if len(variablesInvolved) == 2:
+        if len(variablesInvolved) == 1:
+            for j in self.domains[variablesInvolved[0]]:
+                if func(j):
+                    break
+            else:
+                self.domains[variable].remove(j)
+                if len(self.domains[variable]) == 1:
+                    self.progress += 1
+                modified = True
+
+        elif len(variablesInvolved) == 2:
             for j in self.domains[variablesInvolved[0]]:
                 for k in self.domains[variablesInvolved[1]]:
                     if func(j, k):

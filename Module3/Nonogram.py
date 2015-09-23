@@ -2,6 +2,7 @@ from graphics import *
 
 from CSP import *
 from Constraint import *
+from copy import deepcopy
 
 class Node:
 
@@ -20,7 +21,6 @@ class Block:
 
 
 def readCsp(textFile):
-
     csp = CSP()
 
     board = []
@@ -28,6 +28,8 @@ def readCsp(textFile):
     file = open(textFile)
 
     firstLine = file.readline().split(" ")
+
+    domainX = range(int(firstLine[1]))
 
     counter = 0
     for i in range(int(firstLine[1])):
@@ -42,27 +44,40 @@ def readCsp(textFile):
             counter += 1
             csp.variables.append(block)
             csp.constraints[block] = []
+            csp.domains[block] = deepcopy(domainX)
 
-        for j in csp.variables:
-            if j.index == len(csp.variables) - 1:
-                csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' < ' + firstLine[0]))
+
+    for j in csp.variables:
+        if j.index == len(csp.variables) - 1:
+            csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + firstLine[0]))
+        else:
+            if j.rowNumber == csp.variables[j.index + 1].rowNumber:
+
+                #j.text = 'b1'
+                #str(j.length) = '2'
+                #csp.variables[j.index + 1].text = 'b2'
+                #'b1 + 2 < b2'
+                csp.constraints[j].append(Constraint([j, csp.variables[j.index + 1]], j.text + ' + ' + str(j.length) + ' < ' + csp.variables[j.index + 1].text))
             else:
-                if j.rowNumber == csp.variables[j.index + 1].rowNumber:
-
-                    #j.text = 'b1'
-                    #str(j.length) = '2'
-                    #csp.variables[j.index + 1].text = 'b2'
-                    #'b1 + 2 < b2'
-                    csp.constraints[j].append(Constraint([j, csp.variables[j.index + 1]], j.text + ' + ' + str(j.length) + ' < ' + csp.variables[j.index + 1].text))
-                else:
-                    csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' < ' + firstLine[0]))
+                csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + firstLine[0]))
 
     return csp
 csp = readCsp("scenario0")
 
-for i in csp.constraints:
-    for j in range(len(i)):
-        print()
+
+
+for i in csp.variables:
+    for j in csp.constraints[i]:
+        print(j.expression)
+
+for i in csp.variables:
+    print(csp.domains[i])
+csp.initializeQueue()
+csp.domainFilter()
+print("\n")
+for i in csp.variables:
+    print(i.text, csp.domains[i])
+
 
 
 
