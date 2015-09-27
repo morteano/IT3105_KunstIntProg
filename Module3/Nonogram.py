@@ -4,6 +4,8 @@ from CSP import *
 from Constraint import *
 from copy import deepcopy
 
+numberOfSegmentsInRows = 0
+
 class Node:
 
     def __init__(self, xPos, yPos):
@@ -50,6 +52,7 @@ def readCsp(textFile):
             csp.constraints[block] = []
             csp.domains[block] = deepcopy(domainX)
 
+    global numberOfSegmentsInRows
     numberOfSegmentsInRows = counter;
 
     # Add start position for segments in columns
