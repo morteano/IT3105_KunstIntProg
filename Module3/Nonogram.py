@@ -110,4 +110,6 @@ print("\n")
 for i in csp.variables:
     print(i.text, csp.domains[i])
 
+print numberOfSegmentsInRows
+
 
