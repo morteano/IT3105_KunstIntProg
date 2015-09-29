@@ -68,6 +68,8 @@ class CSP:
         for j in variablesInvolved:
             variableTexts.append(j.text)
 
+        toBeDeleted = []
+
         func = self.makefunc(variableTexts, constraint.expression)
 
         if len(variablesInvolved) == 2:
@@ -76,10 +78,12 @@ class CSP:
                     if func(j, k):
                         break
                 else:
-                    self.domains[variable].remove(j)
+                    toBeDeleted.append(j)
                     if len(self.domains[variable]) == 1:
                         self.progress += 1
                     modified = True
+            for j in toBeDeleted:
+                self.domains[variable].remove(j)
         return modified
 
     #initialize the queue containing variables and constraint pairs to filter variable domains
@@ -222,7 +226,6 @@ def solveGraph(graph, numColors, nodeDistance, shiftDistance):
                 if graphicCircles[i.id][1] != color:
                     graphicCircles[i.id][0].setFill(color)
                     graphicCircles[i.id][1] = color
-
         if currentCsp.isSolved():
             resultCsp = currentCsp
             break

@@ -4,8 +4,6 @@ from CSP import *
 from Constraint import *
 from copy import deepcopy
 
-numberOfSegmentsInRows = 0
-
 class Node:
 
     def __init__(self, xPos, yPos):
@@ -15,11 +13,15 @@ class Node:
 
 class Block:
     # Rows and columns
-    def __init__(self, index, length, rowNumber):
+    def __init__(self, index, length, rowNumber, colNumber):
         self.index = index
         self.rowNumber = rowNumber
+        self.colNumber = colNumber
         self.length = length
-        self.text = 'b' + str(self.index)
+        if self.rowNumber == -1:
+            self.text = 'cb' + str(self.index)
+        else:
+            self.text = 'rb' + str(self.index)
 
 
 def readCsp(textFile):
@@ -46,20 +48,17 @@ def readCsp(textFile):
     for i in range(numberOfRows):
         line = file.readline().split(" ")
         for j in line:
-            block = Block(counter, int(j), i)
+            block = Block(counter, int(j), i, -1)
             counter += 1
             csp.variables.append(block)
             csp.constraints[block] = []
             csp.domains[block] = deepcopy(domainX)
 
-    global numberOfSegmentsInRows
-    numberOfSegmentsInRows = counter;
-
     # Add start position for segments in columns
     for i in range(numberOfColumns):
         line = file.readline().split(" ")
         for j in line:
-            block = Block(counter, int(j), i)
+            block = Block(counter, int(j), -1, i)
             counter += 1
             csp.variables.append(block)
             csp.constraints[block] = []
@@ -67,11 +66,12 @@ def readCsp(textFile):
 
     # Add constraints to CSP
     for j in csp.variables:
+
         # Check if segment is the last
         if j.index == len(csp.variables) - 1:
             csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + str(numberOfColumns)))
         # Segment is in a row
-        elif j.index < numberOfSegmentsInRows:
+        elif j.colNumber == -1:
             if j.rowNumber == csp.variables[j.index + 1].rowNumber:
 
                 #j.text = 'b1'
@@ -84,7 +84,7 @@ def readCsp(textFile):
                 csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + str(numberOfColumns)))
         # Segment is in a column
         else:
-            if j.rowNumber == csp.variables[j.index + 1].rowNumber:
+            if j.colNumber == csp.variables[j.index + 1].colNumber:
                 csp.constraints[j].append(Constraint([j, csp.variables[j.index + 1]], j.text + ' + ' + str(j.length) + ' < ' + csp.variables[j.index + 1].text))
                 csp.constraints[csp.variables[j.index + 1]].append(Constraint([csp.variables[j.index + 1], j], j.text + ' + ' + str(j.length) + ' < ' + csp.variables[j.index + 1].text))
             else:
@@ -96,6 +96,21 @@ def readCsp(textFile):
 
 csp = readCsp("scenario0")
 
+def getVariablesInRow(csp, row):
+    list = []
+    for i in csp.variables:
+        if i.rowNumber != -1:
+            if i.rowNumber == row:
+                list.append(i)
+    return list
+
+def getVariablesInColumn(csp, col):
+    list = []
+    for i in csp.variables:
+        if i.colNumber != -1:
+            if i.colNumber == col:
+                list.append(i)
+    return list
 
 
 for i in csp.variables:
@@ -109,7 +124,5 @@ csp.domainFilter()
 print("\n")
 for i in csp.variables:
     print(i.text, csp.domains[i])
-
-print numberOfSegmentsInRows
 
 
