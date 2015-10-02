@@ -31,13 +31,14 @@ class LineSegment:
         self.row = row
         self.col = col
         if self.row == -1:
-            self.text = 'c' + str(self.row)
+            self.text = 'c' + str(self.col)
         else:
             self.text = 'r' + str(self.row)
 
 # Global variables
 numberOfRows = 0
 numberOfColumns = 0
+
 
 def readCsp(textFile):
     csp = CSP()
@@ -196,18 +197,23 @@ def recursiveDomains(csp, rows, var, segment, numberOfSegments):
 # TODO: Do some more magic!
 def addConstraints(rowCsp):
     for row in range(numberOfRows):
-        var = rowCsp.variables[row]
+        variable = rowCsp.variables[row]
         for col in range(numberOfColumns):
-            rowCsp.constraints[var].append(Constraint([var, csp.variables[numberOfRows+col]], var.text + '[' + str(col) + ']' + ' = ' + csp.variables[numberOfRows+col].text + '[' + str(row) + ']'))
+            rowCsp.constraints[variable].append(Constraint([variable, rowCsp.variables[numberOfRows+col]], variable.text + '[' + str(col) + ']' + ' == ' + rowCsp.variables[numberOfRows+col].text + '[' + str(row) + ']'))
+            rowCsp.constraints[rowCsp.variables[numberOfRows+col]].append(Constraint([rowCsp.variables[numberOfRows+col], variable], variable.text + '[' + str(col) + ']' + ' == ' + rowCsp.variables[numberOfRows+col].text + '[' + str(row) + ']'))
 
 
 
 def changeFromSegmentsToRows(segmentCsp):
     rowCsp = CSP()
     for row in range(numberOfRows):
-        rowCsp.variables.append(LineSegment(row, -1))
+        variable = LineSegment(row, -1)
+        rowCsp.variables.append(variable)
+        rowCsp.constraints[variable] = []
     for col in range(numberOfColumns):
-        rowCsp.variables.append(LineSegment(-1, col))
+        variable = LineSegment(-1, col)
+        rowCsp.variables.append(variable)
+        rowCsp.constraints[variable] = []
 
     # Add rows as variables to CSP
     for row in range(numberOfRows):
@@ -222,7 +228,7 @@ def changeFromSegmentsToRows(segmentCsp):
 
 
     # Add constraints to rowCsp
-    #addConstraints(rowCsp)
+    addConstraints(rowCsp)
 
     return rowCsp
 
@@ -237,6 +243,12 @@ for var in csp.variables:
     print(var.index, csp.domains[var])
 
 newCsp = changeFromSegmentsToRows(csp)
+
+for var in newCsp.variables:
+    print(var.row, var.col, newCsp.domains[var])
+
+newCsp.initializeQueue()
+newCsp.domainFilter()
 
 for var in newCsp.variables:
     print(var.row, var.col, newCsp.domains[var])
