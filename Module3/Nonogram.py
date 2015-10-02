@@ -136,7 +136,6 @@ def remove(row, columns, elementNrRow, elementNrCol):
     return remove
 
 
-# TODO: Find out som genius way to do this
 # Add domains to CSP
 def addDomains(segmentCsp, rowCsp):
     # segment = 0
@@ -169,7 +168,6 @@ def addDomains(segmentCsp, rowCsp):
         counter += len(getVariablesInColumn(segmentCsp, i-numberOfRows))
 
 
-# TODO: Fix domain for last variable
 def recursiveDomains(csp, rows, var, segment, numberOfSegments):
     if segment == numberOfSegments:
         return rows
@@ -194,7 +192,6 @@ def recursiveDomains(csp, rows, var, segment, numberOfSegments):
     return recursiveDomains(csp, domainResults, nextVar, segment + 1, numberOfSegments)
 
 
-# TODO: Do some more magic!
 def addConstraints(rowCsp):
     for row in range(numberOfRows):
         variable = rowCsp.variables[row]
@@ -242,13 +239,16 @@ csp.domainFilter()
 for var in csp.variables:
     print(var.index, csp.domains[var])
 
-newCsp = changeFromSegmentsToRows(csp)
+lineCsp = changeFromSegmentsToRows(csp)
 
-for var in newCsp.variables:
-    print(var.row, var.col, newCsp.domains[var])
+for var in lineCsp.variables:
+    print(var.row, var.col, lineCsp.domains[var])
 
-newCsp.initializeQueue()
-newCsp.domainFilter()
+lineCsp.initializeQueue()
+lineCsp.domainFilter()
 
-for var in newCsp.variables:
-    print(var.row, var.col, newCsp.domains[var])
+for var in lineCsp.variables:
+    print(var.row, var.col, lineCsp.domains[var])
+
+for var in lineCsp.variables:
+    lineCsp.printConstraints(var)

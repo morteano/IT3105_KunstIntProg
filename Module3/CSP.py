@@ -59,6 +59,7 @@ class CSP:
                     if len(self.domains[variable]) == 1:
                         self.progress += 1
                     modified = True
+                    self.rerun(variablesInvolved[1])
             for j in test:
                 self.domains[variable].remove(j)
         return modified
