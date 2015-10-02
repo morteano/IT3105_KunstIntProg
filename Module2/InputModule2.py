@@ -221,7 +221,6 @@ def solveGraph(graph, numColors):
     graphicCircles = []
 
     minX, maxX, minY, maxY = extremePoint(startCsp)
-    print(minX, maxX, minY, maxY)
     nodeDistance = 600/(maxX-minX)
     if minX < 0:
         shiftDistance = 20-minX*nodeDistance
