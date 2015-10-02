@@ -160,6 +160,23 @@ def create_csp(filename, numColors):
             csp.domains[i].append(colors[j])
     return csp
 
+# Find the extreme points in the graph
+def extremePoint(csp):
+    minX = csp.variables[0].xPos
+    minY = csp.variables[0].yPos
+    maxX = csp.variables[0].xPos
+    maxY = csp.variables[0].yPos
+    for var in csp.variables:
+        if var.xPos < minX:
+            minX = var.xPos
+        elif var.xPos > maxX:
+            maxX = var.xPos
+        if var.yPos < minY:
+            minY = var.yPos
+        elif var.yPos > maxY:
+            maxY = var.yPos
+    return minX, maxX, minY, maxY
+
 
 # Finds the smallest domain
 def bestChoice(csp, numColors):
@@ -181,7 +198,7 @@ def heuristic(csp):
             value += len(csp.variables)
     return value
 
-def solveGraph(graph, numColors, nodeDistance, shiftDistance):
+def solveGraph(graph, numColors):
     startCsp = create_csp(graph, numColors)
 
     #is the solved csp
@@ -203,8 +220,15 @@ def solveGraph(graph, numColors, nodeDistance, shiftDistance):
     #keeps track of graphical circles and what color they have
     graphicCircles = []
 
-    win = GraphWin("CSP", 650, 600)
+    minX, maxX, minY, maxY = extremePoint(startCsp)
+    print(minX, maxX, minY, maxY)
+    nodeDistance = 600/(maxX-minX)
+    if minX < 0:
+        shiftDistance = 20-minX*nodeDistance
+    else:
+        shiftDistance = 20
 
+    win = GraphWin("CSP", 650, 650)
     for i in startCsp.variables:
         # Draw edges
         for neighbour in startCsp.constraints[i]:
@@ -294,9 +318,9 @@ def solveGraph(graph, numColors, nodeDistance, shiftDistance):
 def run():
     graph = raw_input("Graph name: ")
     numColors = raw_input("Number of colors: ")
-    nodeDistance = raw_input("Distance between nodes: ")
-    shiftDistance = raw_input("Distance to shift all nodes: ")
+#    nodeDistance = raw_input("Distance between nodes: ")
+#    shiftDistance = raw_input("Distance to shift all nodes: ")
 
-    solveGraph(graph, int(numColors), float(nodeDistance), int(shiftDistance))
+    solveGraph(graph, int(numColors))
 
 run()
