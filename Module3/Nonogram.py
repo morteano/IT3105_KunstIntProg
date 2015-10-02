@@ -138,21 +138,59 @@ def remove(row, columns, elementNrRow, elementNrCol):
 # TODO: Find out som genius way to do this
 # Add domains to CSP
 def addDomains(segmentCsp, rowCsp):
-    segment = 0
-    for row in range(numberOfRows):
-        print row
-        print(segmentCsp.domains[segmentCsp.variables[segment]])
-        for start in segmentCsp.domains[segmentCsp.variables[segment]]:
-            for seg in range(len(getVariablesInRow(segmentCsp, row))):
-                if seg == 0:
-                    domainRow = [0]*numberOfColumns
-                elif start - 1 == 1 or start - 2 == 1:
-                    break
-                for node in range(segmentCsp.variables[segment].length):
-                    print(start+node)
-                    domainRow[start+node] = 1
-            rowCsp.domains[rowCsp.variables[row]].append(domainRow)
-        segment += 1
+    # segment = 0
+    # for row in range(numberOfRows):
+    #     for seg in range(len(getVariablesInRow(segmentCsp, row))):
+    #         for start in segmentCsp.domains[segmentCsp.variables[segment+seg]]:
+    #             if seg == 0:
+    #                 domainRow = [0]*numberOfColumns
+    #             elif start - 1 == 1 or start - 2 == 1:
+    #                 break
+    #             for node in range(segmentCsp.variables[segment].length):
+    #                 domainRow[start+node] = 1
+    #         rowCsp.domains[rowCsp.variables[row]].append(domainRow)
+    #         print(domainRow)
+    #     segment += 1
+
+    rows = [[0]*numberOfColumns]
+    counter = 0
+    for i in range(numberOfRows):
+        domain = recursiveDomains(segmentCsp, rows, segmentCsp.variables[counter], 0, len(getVariablesInRow(segmentCsp, i)))
+        for d in domain:
+            rowCsp.domains[rowCsp.variables[i]].append(d)
+        counter += len(getVariablesInRow(segmentCsp, i))
+
+    columns = [[0]*numberOfRows]
+    for i in range(numberOfRows, numberOfColumns+numberOfRows):
+        domain = recursiveDomains(segmentCsp, columns, segmentCsp.variables[counter], 0, len(getVariablesInColumn(segmentCsp, i-numberOfRows)))
+        for d in domain:
+            rowCsp.domains[rowCsp.variables[i]].append(d)
+        counter += len(getVariablesInColumn(segmentCsp, i-numberOfRows))
+
+
+# TODO: Fix domain for last variable
+def recursiveDomains(csp, rows, var, segment, numberOfSegments):
+    if segment == numberOfSegments:
+        return rows
+    domainResults = []
+    for row in rows:
+        for start in csp.domains[var]:
+            tempRow = deepcopy(row)
+            if segment != 0:
+                if row[start-1] != 1 and var.rowNumber == csp.variables[var.index-1].rowNumber:
+                    for node in range(var.length):
+                        tempRow[start+node] = 1
+                    domainResults.append(tempRow)
+            else:
+                for node in range(var.length):
+                    tempRow[start+node] = 1
+                domainResults.append(tempRow)
+
+    if var.index == len(csp.variables)-1:
+        nextVar = var
+    else:
+        nextVar = csp.variables[var.index+1]
+    return recursiveDomains(csp, domainResults, nextVar, segment + 1, numberOfSegments)
 
 
 # TODO: Do some more magic!
@@ -182,24 +220,23 @@ def changeFromSegmentsToRows(segmentCsp):
     # Add domain to rowCsp
     addDomains(segmentCsp, rowCsp)
 
-    # Add constraints to rowCsp
-    addConstraints(rowCsp)
 
+    # Add constraints to rowCsp
+    #addConstraints(rowCsp)
+
+    return rowCsp
 
 
 
 
 csp = readCsp("scenario0")
-# for i in csp.variables:
-#     for j in csp.constraints[i]:
-#         print(j.expression)
-#
-# for i in csp.variables:
-#     print(csp.domains[i])
 csp.initializeQueue()
 csp.domainFilter()
-# print("\n")
-# for i in csp.variables:
-#     print(i.text, csp.domains[i])
-changeFromSegmentsToRows(csp)
 
+for var in csp.variables:
+    print(var.index, csp.domains[var])
+
+newCsp = changeFromSegmentsToRows(csp)
+
+for var in newCsp.variables:
+    print(var.row, var.col, newCsp.domains[var])
