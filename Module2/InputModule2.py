@@ -1,7 +1,8 @@
 import time
 import heapq
 
-colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange"}
+colors = {0: "blue", 1: "red", 2: "green", 3: "yellow", 4: "purple", 5: "orange", 6: "pink", 7: "black", 8: "gray", 9: "lightGreen"}
+# TODO: Fit in window. Maybe search through the file first!
 
 from graphics import *
 from Constraint import *
