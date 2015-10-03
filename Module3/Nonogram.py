@@ -1,9 +1,8 @@
 from graphics import *
-
 from CSP import *
 from Constraint import *
 from copy import deepcopy
-
+import heapq
 
 class Node:
 
@@ -34,6 +33,21 @@ class LineSegment:
             self.text = 'c' + str(self.col)
         else:
             self.text = 'r' + str(self.row)
+
+
+class HeapQueue: #Priority queue with heap as data structure
+    def __init__(self):
+        self.elements = []
+
+    def empty(self):
+        return len(self.elements) == 0
+
+    def put(self, item, priority): #adds element to the heap
+        heapq.heappush(self.elements, (priority, item))
+
+    def get(self): #returns the element with lowest value and removes it from the heap
+        return heapq.heappop(self.elements)[1]
+
 
 # Global variables
 numberOfRows = 0
@@ -223,32 +237,104 @@ def changeFromSegmentsToRows(segmentCsp):
     # Add domain to rowCsp
     addDomains(segmentCsp, rowCsp)
 
-
     # Add constraints to rowCsp
     addConstraints(rowCsp)
 
     return rowCsp
 
 
+def heuristic(csp):
+    value = len(csp.variables)
+    for i in csp.variables:
+        if len(csp.domains[i]) == 1:
+            value -= 1
+        if len(csp.domains[i]) == 0:
+            value += len(csp.variables)
+    return value
 
 
-csp = readCsp("scenario0")
-csp.initializeQueue()
-csp.domainFilter()
+# Finds the smallest domain
+def bestChoice(csp):
+    domainSize = 10000000
+    var = csp.variables[0]
+    for i in csp.variables:
+        if domainSize > len(csp.domains[i]) > 1:
+            domainSize = len(csp.domains[i])
+            var = i
+    return var
 
-for var in csp.variables:
-    print(var.index, csp.domains[var])
 
-lineCsp = changeFromSegmentsToRows(csp)
+def drawNonogram(csp):
+    win = GraphWin("Nonogram", 600, 600)
+    pixelSize = 600/max(numberOfColumns, numberOfRows)
+    for row in xrange(numberOfRows):
+        col = 0
+        print csp.domains[csp.variables[row]][0]
+        for node in csp.domains[csp.variables[row]][0]:
+            rect = Rectangle(Point(pixelSize*col, pixelSize*row), Point(pixelSize*col+pixelSize, pixelSize*row+pixelSize))
+            if node == 1:
+                rect.setFill('blue')
+            else:
+                rect.setFill('white')
+            rect.draw(win)
+            col += 1
+    win.getMouse()
+    win.close()
 
-for var in lineCsp.variables:
-    print(var.row, var.col, lineCsp.domains[var])
+def solveNonogram():
+    # Find the segments in ech line
+    segmentCsp = readCsp("scenario0")
+    segmentCsp.initializeQueue()
+    segmentCsp.domainFilter()
 
-lineCsp.initializeQueue()
-lineCsp.domainFilter()
+    # Make a cps where the segments from segmentCsp makes the domain
+    lineCsp = changeFromSegmentsToRows(segmentCsp)
+    lineCsp.initializeQueue()
+    print("Before domainFilter:")
+    for var in lineCsp.variables:
+        print lineCsp.domains[var]
+    lineCsp.domainFilter()
+    print("After domainFilter:")
+    for var in lineCsp.variables:
+        print lineCsp.domains[var]
 
-for var in lineCsp.variables:
-    print(var.row, var.col, lineCsp.domains[var])
+    openCsps = HeapQueue()
 
-for var in lineCsp.variables:
-    lineCsp.printConstraints(var)
+    openCsps.put(lineCsp, heuristic(lineCsp))
+
+    numNodesInTree = 1
+
+    numPoppedNodes = 0
+
+    cameFrom = {}
+
+    while not lineCsp.isSolved():
+        lineCsp = openCsps.get()
+        print("Pop from openCsps")
+        numPoppedNodes += 1
+
+        # Find the next variable to guess on
+        var = bestChoice(lineCsp)
+        print("Length: " + str(len(lineCsp.domains[var])))
+        for i in range(len(lineCsp.domains[var])):
+            nextCsp = deepcopy(lineCsp)
+
+            nextVar = bestChoice(nextCsp)
+            nextCsp.domains[nextVar] = [nextCsp.domains[nextVar][i]]
+            nextCsp.progress += 1
+            nextCsp.rerun(nextVar)
+            nextCsp.domainFilter()
+
+            numNodesInTree += 1
+
+            cameFrom[nextCsp] = lineCsp
+            print("Add to openCsps")
+            openCsps.put(nextCsp, heuristic(nextCsp))
+
+    return lineCsp
+
+
+csp = solveNonogram()
+#for var in csp.variables:
+#    print(var.row, var.col, csp.domains[var])
+drawNonogram(csp)
