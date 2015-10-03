@@ -187,10 +187,14 @@ def recursiveDomains(csp, rows, var, segment, numberOfSegments):
         return rows
     domainResults = []
     for row in rows:
+        lastNodeNr = -2
+        for nodeNr in xrange(len(row)):
+            if row[nodeNr] == 1:
+                lastNodeNr = nodeNr
         for start in csp.domains[var]:
             tempRow = deepcopy(row)
             if segment != 0:
-                if row[start-1] != 1 and var.rowNumber == csp.variables[var.index-1].rowNumber:
+                if start > lastNodeNr+1 and var.rowNumber == csp.variables[var.index-1].rowNumber:
                     for node in range(var.length):
                         tempRow[start+node] = 1
                     domainResults.append(tempRow)
