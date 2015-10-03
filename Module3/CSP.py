@@ -59,7 +59,11 @@ class CSP:
                     if len(self.domains[variable]) == 1:
                         self.progress += 1
                     modified = True
-                    self.rerun(variablesInvolved[1])
+
+
+
+                    self.rerun(variablesInvolved[1]) #make sure all domains are properly updated
+
             for j in test:
                 self.domains[variable].remove(j)
         return modified
@@ -81,6 +85,7 @@ class CSP:
                 for i in self.constraints[currentVariable]:
                     if i != currentConstraint:
                         self.queue.append((currentVariable, i))
+
 
     def rerun(self, variable):
         for i in self.constraints[variable]:

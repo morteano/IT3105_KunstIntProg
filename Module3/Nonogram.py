@@ -4,6 +4,8 @@ from Constraint import *
 from copy import deepcopy
 import heapq
 
+import time
+
 
 class Node:
 
@@ -67,8 +69,8 @@ def readCsp(textFile):
     numberOfRows = int(firstLine[1])
     global numberOfColumns
     numberOfColumns = int(firstLine[0])
-    domainX = range(numberOfRows)
-    domainY = range(numberOfColumns)
+    domainX = range(numberOfColumns)
+    domainY = range(numberOfRows)
 
     # Creates board
     for i in range(numberOfRows):
@@ -90,6 +92,7 @@ def readCsp(textFile):
     # Add start position for segments in columns
     for i in range(numberOfColumns):
         line = file.readline().split(" ")
+        line.reverse()
         for j in line:
             block = Block(counter, int(j), -1, i)
             counter += 1
@@ -102,7 +105,7 @@ def readCsp(textFile):
 
         # Check if segment is the last
         if j.index == len(csp.variables) - 1:
-            csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + str(numberOfColumns)))
+            csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + str(numberOfRows)))
         # Segment is in a row
         elif j.colNumber == -1:
             if j.rowNumber == csp.variables[j.index + 1].rowNumber:
@@ -287,21 +290,15 @@ def drawNonogram(csp):
 
 def solveNonogram():
     # Find the segments in ech line
-    segmentCsp = readCsp("scenario0")
+    segmentCsp = readCsp("pilot.jpg")
     segmentCsp.initializeQueue()
     segmentCsp.domainFilter()
 
     # Make a cps where the segments from segmentCsp makes the domain
     lineCsp = changeFromSegmentsToRows(segmentCsp)
     lineCsp.initializeQueue()
-    print("Before domainFilter:")
-    for var in lineCsp.variables:
-        print lineCsp.domains[var]
-    lineCsp.domainFilter()
-    print("After domainFilter:")
-    for var in lineCsp.variables:
-        print lineCsp.domains[var]
 
+    lineCsp.domainFilter()
     openCsps = HeapQueue()
 
     openCsps.put(lineCsp, heuristic(lineCsp))
@@ -312,7 +309,49 @@ def solveNonogram():
 
     cameFrom = {}
 
+    counter = 0
+
+    graphicRects = []
+
+
+    win = GraphWin("Nonogram", 600, 600)
+    pixelSize = 600/max(numberOfColumns, numberOfRows)
+    for row in xrange(numberOfRows):
+        col = 0
+        for node in lineCsp.domains[lineCsp.variables[row]][0]:
+            rect = Rectangle(Point(pixelSize*col, 600-pixelSize*(row+1)), Point(pixelSize*col+pixelSize, 600-pixelSize*row))
+            if node == 1:
+                rect.setFill('blue')
+                graphicRects.append([rect, "blue"])
+            else:
+                rect.setFill('white')
+                graphicRects.append([rect, "white"])
+            rect.draw(win)
+            col += 1
+
+
     while not lineCsp.isSolved():
+        #print("counter", counter)
+        counter += 1
+        time.sleep(1)
+        i = 0
+        for row in xrange(numberOfRows):
+            col = 0
+            for node in lineCsp.domains[lineCsp.variables[row]][0]:
+                if node == 1:
+                    if graphicRects[i][1] == "white":
+                        graphicRects[i][0].setFill('blue')
+                        graphicRects[i][1] = "blue"
+                else:
+                    if graphicRects[i][1] == "blue":
+                        graphicRects[i][0].setFill('white')
+                        graphicRects[i][1] = "white"
+                #rect.draw(win)
+                col += 1
+                i += 1
+
+
+
         lineCsp = openCsps.get()
         numPoppedNodes += 1
 
@@ -332,10 +371,12 @@ def solveNonogram():
             cameFrom[nextCsp] = lineCsp
             openCsps.put(nextCsp, heuristic(nextCsp))
 
+    win.getMouse()
+    win.close()
+
     return lineCsp
 
 
 csp = solveNonogram()
 #for var in csp.variables:
 #    print(var.row, var.col, csp.domains[var])
-drawNonogram(csp)
