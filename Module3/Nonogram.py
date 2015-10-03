@@ -298,21 +298,7 @@ def solveNonogram():
     lineCsp = changeFromSegmentsToRows(segmentCsp)
     lineCsp.initializeQueue()
 
-    lineCsp.domainFilter()
-    openCsps = HeapQueue()
-
-    openCsps.put(lineCsp, heuristic(lineCsp))
-
-    numNodesInTree = 1
-
-    numPoppedNodes = 0
-
-    cameFrom = {}
-
-    counter = 0
-
     graphicRects = []
-
 
     win = GraphWin("Nonogram", 600, 600)
     pixelSize = 600/max(numberOfColumns, numberOfRows)
@@ -329,12 +315,30 @@ def solveNonogram():
             rect.draw(win)
             col += 1
 
+    lineCsp.domainFilterGraphics(numberOfRows, graphicRects)
+    openCsps = HeapQueue()
+
+    openCsps.put(lineCsp, heuristic(lineCsp))
+
+    numNodesInTree = 1
+
+    numPoppedNodes = 0
+
+    cameFrom = {}
+
+    counter = 0
+
+
+
+
+
+
 
     while not lineCsp.isSolved():
         #print("counter", counter)
         counter += 1
-        time.sleep(1)
-        i = 0
+        #time.sleep(1)
+        """i = 0
         for row in xrange(numberOfRows):
             col = 0
             for node in lineCsp.domains[lineCsp.variables[row]][0]:
@@ -348,7 +352,7 @@ def solveNonogram():
                         graphicRects[i][1] = "white"
                 #rect.draw(win)
                 col += 1
-                i += 1
+                i += 1"""
 
 
 
@@ -364,13 +368,14 @@ def solveNonogram():
             nextCsp.domains[nextVar] = [nextCsp.domains[nextVar][i]]
             nextCsp.progress += 1
             nextCsp.rerun(nextVar)
-            nextCsp.domainFilter()
+            nextCsp.domainFilterGraphics(numberOfRows, graphicRects)
 
             numNodesInTree += 1
 
             cameFrom[nextCsp] = lineCsp
             openCsps.put(nextCsp, heuristic(nextCsp))
 
+    print("YAY")
     win.getMouse()
     win.close()
 

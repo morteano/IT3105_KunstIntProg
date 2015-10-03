@@ -86,6 +86,35 @@ class CSP:
                     if i != currentConstraint:
                         self.queue.append((currentVariable, i))
 
+    def domainFilterGraphics(self, numberOfRows, graphicRects):
+        while self.queue:
+            varConsTuple = self.queue.pop(0)
+            currentVariable = varConsTuple[0]
+            currentConstraint = varConsTuple[1]
+
+            i = 0
+            for row in xrange(numberOfRows):
+                col = 0
+                if len(self.domains[self.variables[row]]) > 0:
+                    for node in self.domains[self.variables[row]][0]:
+
+                        if node == 1:
+                            if graphicRects[i][1] == "white":
+                                graphicRects[i][0].setFill('blue')
+                                graphicRects[i][1] = "blue"
+                        else:
+                            if graphicRects[i][1] == "blue":
+                                graphicRects[i][0].setFill('white')
+                                graphicRects[i][1] = "white"
+                        #rect.draw(win)
+                        col += 1
+                        i += 1
+
+            if self.revise(currentVariable, currentConstraint):
+                for i in self.constraints[currentVariable]:
+                    if i != currentConstraint:
+                        self.queue.append((currentVariable, i))
+
 
     def rerun(self, variable):
         for i in self.constraints[variable]:
