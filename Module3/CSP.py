@@ -36,7 +36,6 @@ class CSP:
         variablesInvolved = constraint.variables
         for j in variablesInvolved:
             variableTexts.append(j.text)
-
         func = self.makefunc(variableTexts, constraint.expression)
         test = []
         if len(variablesInvolved) == 1:
@@ -76,7 +75,6 @@ class CSP:
             varConsTuple = self.queue.pop(0)
             currentVariable = varConsTuple[0]
             currentConstraint = varConsTuple[1]
-
             if self.revise(currentVariable, currentConstraint):
                 for i in self.constraints[currentVariable]:
                     if i != currentConstraint:

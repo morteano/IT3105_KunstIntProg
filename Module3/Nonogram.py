@@ -28,12 +28,12 @@ class Block:
 
 class LineSegment:
     def __init__(self, row, col):
-        self.row = row
-        self.col = col
-        if self.row == -1:
-            self.text = 'c' + str(self.col)
+        self.rowNumber = row
+        self.colNumber = col
+        if self.rowNumber == -1:
+            self.text = 'c' + str(self.colNumber)
         else:
-            self.text = 'r' + str(self.row)
+            self.text = 'r' + str(self.rowNumber)
 
 
 class HeapQueue: #Priority queue with heap as data structure
@@ -90,6 +90,7 @@ def readCsp(textFile):
     # Add start position for segments in columns
     for i in range(numberOfColumns):
         line = file.readline().split(" ")
+        line.reverse()
         for j in line:
             block = Block(counter, int(j), -1, i)
             counter += 1
@@ -153,20 +154,6 @@ def remove(row, columns, elementNrRow, elementNrCol):
 
 # Add domains to CSP
 def addDomains(segmentCsp, rowCsp):
-    # segment = 0
-    # for row in range(numberOfRows):
-    #     for seg in range(len(getVariablesInRow(segmentCsp, row))):
-    #         for start in segmentCsp.domains[segmentCsp.variables[segment+seg]]:
-    #             if seg == 0:
-    #                 domainRow = [0]*numberOfColumns
-    #             elif start - 1 == 1 or start - 2 == 1:
-    #                 break
-    #             for node in range(segmentCsp.variables[segment].length):
-    #                 domainRow[start+node] = 1
-    #         rowCsp.domains[rowCsp.variables[row]].append(domainRow)
-    #         print(domainRow)
-    #     segment += 1
-
     rows = [[0]*numberOfColumns]
     counter = 0
     for i in range(numberOfRows):
@@ -287,20 +274,17 @@ def drawNonogram(csp):
 
 def solveNonogram():
     # Find the segments in ech line
-    segmentCsp = readCsp("scenario0")
+    segmentCsp = readCsp("scenario4")
     segmentCsp.initializeQueue()
     segmentCsp.domainFilter()
 
     # Make a cps where the segments from segmentCsp makes the domain
     lineCsp = changeFromSegmentsToRows(segmentCsp)
     lineCsp.initializeQueue()
-    print("Before domainFilter:")
-    for var in lineCsp.variables:
-        print lineCsp.domains[var]
     lineCsp.domainFilter()
-    print("After domainFilter:")
-    for var in lineCsp.variables:
-        print lineCsp.domains[var]
+    # print("After domainFilter:")
+    # for var in lineCsp.variables:
+    #     print lineCsp.domains[var]
 
     openCsps = HeapQueue()
 
