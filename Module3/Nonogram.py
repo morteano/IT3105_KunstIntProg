@@ -4,6 +4,7 @@ from Constraint import *
 from copy import deepcopy
 import heapq
 
+
 class Node:
 
     def __init__(self, xPos, yPos):
@@ -273,9 +274,8 @@ def drawNonogram(csp):
     pixelSize = 600/max(numberOfColumns, numberOfRows)
     for row in xrange(numberOfRows):
         col = 0
-        print csp.domains[csp.variables[row]][0]
         for node in csp.domains[csp.variables[row]][0]:
-            rect = Rectangle(Point(pixelSize*col, pixelSize*row), Point(pixelSize*col+pixelSize, pixelSize*row+pixelSize))
+            rect = Rectangle(Point(pixelSize*col, 600-pixelSize*(row+1)), Point(pixelSize*col+pixelSize, 600-pixelSize*row))
             if node == 1:
                 rect.setFill('blue')
             else:
@@ -314,12 +314,10 @@ def solveNonogram():
 
     while not lineCsp.isSolved():
         lineCsp = openCsps.get()
-        print("Pop from openCsps")
         numPoppedNodes += 1
 
         # Find the next variable to guess on
         var = bestChoice(lineCsp)
-        print("Length: " + str(len(lineCsp.domains[var])))
         for i in range(len(lineCsp.domains[var])):
             nextCsp = deepcopy(lineCsp)
 
@@ -332,7 +330,6 @@ def solveNonogram():
             numNodesInTree += 1
 
             cameFrom[nextCsp] = lineCsp
-            print("Add to openCsps")
             openCsps.put(nextCsp, heuristic(nextCsp))
 
     return lineCsp
