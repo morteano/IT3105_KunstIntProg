@@ -149,6 +149,8 @@ def searchAlgorithm(map, startY, startX, goalY, goalX, type, win):
 
 
 
+
+
         #choose the most promising node
         currentNode = priorityQueue.get()
 
@@ -181,16 +183,19 @@ def searchAlgorithm(map, startY, startX, goalY, goalX, type, win):
                     cameFrom[i] = currentNode
         nrOfNodes += 1
 
-    print("Number of nodes: " + str(nrOfNodes))
     # Create path from goal to start
 
     wasSolved(solved)
 
     finalPath = [currentNode]
+
+    pathLen = 0
+
     while currentNode != startNode:
         currentNode = cameFrom[currentNode]
         finalPath.append(currentNode)
     for i in finalPath:
+        pathLen += 1
         if graphicRects[i][1] == "white":
             graphicRects[i][0].setFill("blue")
             graphicRects[i][1] = "blue"
@@ -203,7 +208,8 @@ def searchAlgorithm(map, startY, startX, goalY, goalX, type, win):
 
 
 
-    return finalPath, examined
+
+    return nrOfNodes, pathLen
 
 def wasSolved(solved):
     if not solved:
