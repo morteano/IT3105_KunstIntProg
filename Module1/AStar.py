@@ -3,7 +3,7 @@ import heapq
 import math
 from Map import Map
 from graphics import *
-
+import time
 
 # Priority queue with heap as data structure
 class HeapQueue:
@@ -84,7 +84,7 @@ def heuristic(nodeY, nodeX, goalY, goalX, type):
     return 0
 
 #the main algorithm
-def searchAlgorithm(map, startY, startX, goalY, goalX, type):
+def searchAlgorithm(map, startY, startX, goalY, goalX, type, win):
     startNode = map.getPos(startY, startX)
     startNode.distance = 0
     startNode.heuristic = heuristic(startY, startX, goalY, goalX, type)
@@ -107,7 +107,47 @@ def searchAlgorithm(map, startY, startX, goalY, goalX, type):
 
     solved = False
 
+    graphicRects = {}
+
+    #create rectangles corresponding to the map, where black is wall, red is start point and green is goal point
+    for i in range(map.height):
+        for j in range(map.width):
+            rectangle = Rectangle(Point((20 * j) + 10, (20 * i) + 10), Point((20 * j) + 30, (20 * i) + 30))
+            if map.getPos(i, j).type == '#':
+                rectangle.setFill("black")
+                graphicRects[map.getPos(i, j)] = [rectangle, "black"]
+            elif map.getPos(i, j).type == 'S':
+                rectangle.setFill("red")
+                graphicRects[map.getPos(i, j)] = [rectangle, "red"]
+            elif map.getPos(i, j).type == 'G':
+                rectangle.setFill("green")
+                graphicRects[map.getPos(i, j)] = [rectangle, "green"]
+            else:
+                rectangle.setFill("white")
+                graphicRects[map.getPos(i, j)] = [rectangle, "white"]
+
+            #draw rectangle to the graphics window
+            rectangle.draw(win)
+
+
     while not priorityQueue.empty():
+
+        finalPath = [currentNode]
+        while currentNode != startNode:
+            currentNode = cameFrom[currentNode]
+            finalPath.append(currentNode)
+        for i in finalPath:
+            if graphicRects[i][1] == "white":
+                graphicRects[i][0].setFill("blue")
+                graphicRects[i][1] = "blue"
+        for i in range(map.height):
+            for j in range(map.width):
+                if graphicRects[map.getPos(i, j)][1] == "blue":
+                    if map.getPos(i, j) not in finalPath:
+                        graphicRects[map.getPos(i, j)][0].setFill("white")
+                        graphicRects[map.getPos(i, j)][1] = "white"
+
+
 
         #choose the most promising node
         currentNode = priorityQueue.get()
@@ -150,6 +190,19 @@ def searchAlgorithm(map, startY, startX, goalY, goalX, type):
     while currentNode != startNode:
         currentNode = cameFrom[currentNode]
         finalPath.append(currentNode)
+    for i in finalPath:
+        if graphicRects[i][1] == "white":
+            graphicRects[i][0].setFill("blue")
+            graphicRects[i][1] = "blue"
+    for i in range(map.height):
+        for j in range(map.width):
+            if graphicRects[map.getPos(i, j)][1] == "blue":
+                if map.getPos(i, j) not in finalPath:
+                    graphicRects[map.getPos(i, j)][0].setFill("white")
+                    graphicRects[map.getPos(i, j)][1] = "white"
+
+
+
     return finalPath, examined
 
 def wasSolved(solved):
@@ -159,14 +212,32 @@ def wasSolved(solved):
 map = Map()
 
 mapInput = raw_input("Enter map text file: ")
-searchInput = " "
-while searchInput not in ["Astar", "BFS", "DFS"]:
-    searchInput = raw_input("Enter search algorithm(Astar / BFS / DFS): ")
+
 
 start, goal = map.readMap(mapInput)
 
 
-result = searchAlgorithm(map, start.yPos, start.xPos, goal.yPos, goal.xPos, searchInput)
+win1 = GraphWin("A Star", 500, 500)
+(nrOfNodes, pathLen) = searchAlgorithm(map, start.yPos, start.xPos, goal.yPos, goal.xPos, "Astar", win1)
+print("Number of nodes for A*: " + str(nrOfNodes))
+print("Number of nodes in path for A*: " + str(pathLen))
+
+map2 = Map()
+start, goal = map2.readMap(mapInput)
+win2 = GraphWin("BFS", 500, 500)
+(nrOfNodes, pathLen) = searchAlgorithm(map2, start.yPos, start.xPos, goal.yPos, goal.xPos, "BFS", win2)
+print("Number of nodes for BFS: " + str(nrOfNodes))
+print("Number of nodes in path for BFS: " + str(pathLen))
+
+map3 = Map()
+start, goal = map3.readMap(mapInput)
+win3 = GraphWin("DFS", 500, 500)
+(nrOfNodes, pathLen) = searchAlgorithm(map3, start.yPos, start.xPos, goal.yPos, goal.xPos, "DFS", win3)
+print("Number of nodes for DFS: " + str(nrOfNodes))
+print("Number of nodes in path for DFS: " + str(pathLen))
+
+win3.getMouse()
+win3.close()
 
 
-displayMap(map, result)
+#displayMap(map, result)
