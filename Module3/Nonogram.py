@@ -290,7 +290,8 @@ def drawNonogram(csp):
 
 def solveNonogram():
     # Find the segments in ech line
-    segmentCsp = readCsp("pilot.jpg")
+    scenario = raw_input("Input file: ")
+    segmentCsp = readCsp(scenario)
     segmentCsp.initializeQueue()
     segmentCsp.domainFilter()
 
@@ -328,7 +329,11 @@ def solveNonogram():
 
     counter = 0
 
+    nodesSetFromStart = 0
 
+    for var in lineCsp.variables:
+        if len(lineCsp.domains[var]) == 1:
+            nodesSetFromStart += 1
 
 
 
@@ -375,7 +380,9 @@ def solveNonogram():
             cameFrom[nextCsp] = lineCsp
             openCsps.put(nextCsp, heuristic(nextCsp))
 
-    print("YAY")
+    print("Number of generated nodes: " + str(numNodesInTree))
+    print("Number of expanded nodes: " + str(numPoppedNodes))
+    print("Number of nodes from start to solution: " + str(lineCsp.progress-nodesSetFromStart))
     win.getMouse()
     win.close()
 
