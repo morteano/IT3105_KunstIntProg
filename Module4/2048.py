@@ -40,29 +40,32 @@ class Board:
 
     def moveLeft(self):
         tempValue = 0
+        index = 0
         for i in range(self.size):
             for j in range(self.size):
                 if tempValue != 0:
                     if tempValue == self.nodes[i][j].value:
                         tempNode.value *= 2
                         self.nodes[i][j].value = 0
+                        tempValue = 0
                 if self.nodes[i][j].value != 0:
-                    if tempValue == 0:
-                        tempValue = self.nodes[i][j].value
-                        self.nodes[i][0].value = self.nodes[i][j].value
+                    tempValue = self.nodes[i][j].value
+                    if j != index:
+                        self.nodes[i][index].value = self.nodes[i][j].value
                         self.nodes[i][j].value = 0
-                        tempNode = self.nodes[i][0]
-                    else:
-                        tempValue = self.nodes[i][j].value
-                        tempNode = self.nodes[i][j]
+                    tempNode = self.nodes[i][index]
+                    index += 1
+
 
 
 
 board = Board(4)
 board.printBoard()
 #board.spawn()
+board.setValue(0, 0, 4)
 board.setValue(0, 3, 2)
-board.setValue(0, 0, 2)
+board.setValue(0, 2, 2)
+board.setValue(0, 1, 4)
 print("")
 board.printBoard()
 board.moveLeft()
