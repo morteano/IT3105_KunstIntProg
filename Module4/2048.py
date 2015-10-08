@@ -1,5 +1,8 @@
 from random import randint
+from graphics import *
 
+
+colors = {1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
 
 class Node:
     def __init__(self, xPos, yPos):
@@ -37,6 +40,36 @@ class Board:
             node.value = 2
         else:
             node.value = 4
+
+    def game(self):
+        screenSize = 600
+        win = GraphWin("2048", screenSize, screenSize)
+        self.spawn()
+        self.drawBoard(screenSize, win)
+        while True:
+            direction = raw_input("Press direction (WASD): ")
+            self.move(direction)
+            self.spawn()
+            self.drawBoard(screenSize, win)
+        win.getMouse()
+        win.close()
+
+    def drawBoard(self, screenSize, win):
+        for j in range(self.size):
+            for i in range(self.size):
+                rect = Rectangle(Point(i*screenSize/self.size, j*screenSize/self.size),Point((i+1)*screenSize/self.size, (j+1)*screenSize/self.size))
+                rect.setFill(colors[self.nodes[j][i].value])
+                rect.draw(win)
+
+    def move(self, direction):
+        if direction == 'a':
+            self.moveLeft()
+        elif direction == "d":
+            self.moveRight()
+        elif direction == "w":
+            self.moveUp()
+        elif direction == "s":
+            self.moveDown()
 
     def moveLeft(self):
         for i in range(self.size):
@@ -125,31 +158,5 @@ class Board:
 
 
 board = Board(4)
-board.printBoard()
-board.spawn()
-board.spawn()
-
-
-print("")
-board.printBoard()
-
-while(True):
-    input = raw_input("w/a/s/d: ")
-
-    if input == "w":
-        board.moveUp()
-    elif input == "a":
-        board.moveLeft()
-    elif input == "s":
-        board.moveDown()
-    elif input == "d":
-        board.moveRight()
-    else:
-        print("invalid input")
-    board.spawn()
-    print("")
-    board.printBoard()
-
-
-
+board.game()
 
