@@ -1,38 +1,25 @@
 from random import randint
 from graphics import *
-import heapq
 
 
-colors = {8192:"Navy", 4096:"Midnightblue", 2048:"darkred", 1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
-graphRect = []
-
-
-class HeapQueue: #Priority queue with heap as data structure
-    def __init__(self):
-        self.elements = []
-
-    def empty(self):
-        return len(self.elements) == 0
-
-    def put(self, item, priority): #adds element to the heap
-        heapq.heappush(self.elements, (priority, item))
-
-    def get(self): #returns the element with lowest value and removes it from the heap
-        return heapq.heappop(self.elements)[1]
+colors = {1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
 
 class Node:
     def __init__(self, xPos, yPos):
         self.xPos = xPos
         self.yPos = yPos
         self.value = 0
+        self.color = colors[self.value]
 
 
 class Board:
     def __init__(self, size):
         self.size = size
         self.emptyNodes = []
-        self.heap = HeapQueue()
         self.nodes = []
+
+        self.graphicRects = []
+
         for i in xrange(size):
             row = []
             for j in xrange(size):
@@ -57,6 +44,7 @@ class Board:
             node.value = 2
         else:
             node.value = 4
+        node.color = colors[node.value]
 
     def game(self):
         screenSize = 600
@@ -67,7 +55,7 @@ class Board:
             direction = raw_input("Press direction (WASD): ")
             self.move(direction)
             self.spawn()
-            self.drawBoard(screenSize, win)
+            self.updateBoard()
         win.getMouse()
         win.close()
 
@@ -75,11 +63,24 @@ class Board:
         for j in range(self.size):
             for i in range(self.size):
                 rect = Rectangle(Point(i*screenSize/self.size, j*screenSize/self.size),Point((i+1)*screenSize/self.size, (j+1)*screenSize/self.size))
+                rect.setFill(self.nodes[j][i].color)
                 rect.setFill(colors[self.nodes[j][i].value])
                 value = Text(Point((i+0.5)*screenSize/self.size, (j+0.5)*screenSize/self.size), self.nodes[j][i].value)
+                self.graphicRects.append([rect, self.nodes[j][i].color, value])
                 rect.draw(win)
-                if self.nodes[j][i].value != 0:
-                    value.draw(win)
+                #if self.nodes[j][i].value != 0:
+                value.draw(win)
+
+
+
+    def updateBoard(self):
+        for j in range(self.size):
+            for i in range(self.size):
+                index = (i * self.size) + j
+                if self.graphicRects[index][1] != self.nodes[j][i].color:
+                    self.graphicRects[index][0].setFill(self.nodes[j][i].color)
+                    self.graphicRects[index][1] = self.nodes[j][i].color
+                    self.graphicRects[index][2].setText(self.nodes[j][i].value)
 
     def move(self, direction):
         if direction == 'a':
@@ -99,14 +100,18 @@ class Board:
                 if tempValue != 0:
                     if tempValue == self.nodes[i][j].value:
                         tempNode.value *= 2
+                        tempNode.color = colors[tempNode.value]
                         self.nodes[i][j].value = 0
+                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
                         self.emptyNodes.append(self.nodes[i][j])
                         tempValue = 0
                 if self.nodes[i][j].value != 0:
                     tempValue = self.nodes[i][j].value
                     if j != index:
                         self.nodes[i][index].value = self.nodes[i][j].value
+                        self.nodes[i][index].color = colors[self.nodes[i][index].value]
                         self.nodes[i][j].value = 0
+                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[i][index]))
                         self.emptyNodes.append(self.nodes[i][j])
                     tempNode = self.nodes[i][index]
@@ -120,14 +125,18 @@ class Board:
                 if tempValue != 0:
                     if tempValue == self.nodes[i][j].value:
                         tempNode.value *= 2
+                        tempNode.color = colors[tempNode.value]
                         self.nodes[i][j].value = 0
+                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
                         self.emptyNodes.append(self.nodes[i][j])
                         tempValue = 0
                 if self.nodes[i][j].value != 0:
                     tempValue = self.nodes[i][j].value
                     if j != index:
                         self.nodes[i][index].value = self.nodes[i][j].value
+                        self.nodes[i][index].color = colors[self.nodes[i][index].value]
                         self.nodes[i][j].value = 0
+                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[i][index]))
                         self.emptyNodes.append(self.nodes[i][j])
                     tempNode = self.nodes[i][index]
@@ -141,14 +150,18 @@ class Board:
                 if tempValue != 0:
                     if tempValue == self.nodes[j][i].value:
                         tempNode.value *= 2
+                        tempNode.color = colors[tempNode.value]
                         self.nodes[j][i].value = 0
+                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
                         self.emptyNodes.append(self.nodes[j][i])
                         tempValue = 0
                 if self.nodes[j][i].value != 0:
                     tempValue = self.nodes[j][i].value
                     if j != index:
                         self.nodes[index][i].value = self.nodes[j][i].value
+                        self.nodes[index][i].color = colors[self.nodes[index][i].value]
                         self.nodes[j][i].value = 0
+                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[index][i]))
                         self.emptyNodes.append(self.nodes[j][i])
                     tempNode = self.nodes[index][i]
@@ -162,56 +175,25 @@ class Board:
                 if tempValue != 0:
                     if tempValue == self.nodes[j][i].value:
                         tempNode.value *= 2
+                        tempNode.color = colors[tempNode.value]
                         self.nodes[j][i].value = 0
+                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
                         self.emptyNodes.append(self.nodes[j][i])
                         tempValue = 0
                 if self.nodes[j][i].value != 0:
                     tempValue = self.nodes[j][i].value
                     if j != index:
                         self.nodes[index][i].value = self.nodes[j][i].value
+                        self.nodes[index][i].color = colors[self.nodes[index][i].value]
                         self.nodes[j][i].value = 0
+                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[index][i]))
                         self.emptyNodes.append(self.nodes[j][i])
                     tempNode = self.nodes[index][i]
                     index -= 1
 
-    def findChildren(self):
-        # Find children
-        return
-
-    def addChildren(self):
-        self.findChildren()
-        self.heap()
-
-
-    def solver(self):
-        screenSize = 600
-        win = GraphWin("2048", screenSize, screenSize)
-        self.drawBoard(screenSize, win)
-        while len(self.emptyNodes) > 0:
-            self.addChildren()
-            self.nodes = self.heap.get()
-            self.updateBoard
-
-
-
 
 
 board = Board(4)
-board.nodes[0][0].value = 8192
-board.nodes[0][1].value = 4096
-board.nodes[0][2].value = 2048
-board.nodes[0][3].value = 1024
-board.nodes[1][0].value = 512
-board.nodes[1][1].value = 256
-board.nodes[1][2].value = 128
-board.nodes[1][3].value = 64
-board.nodes[2][0].value = 32
-board.nodes[2][1].value = 16
-board.nodes[2][2].value = 8
-board.nodes[2][3].value = 4
-
-win = GraphWin("2048", 600,600)
-board.drawBoard(600, win)
-win.getMouse()
+board.game()
 
