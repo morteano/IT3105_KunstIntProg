@@ -1,8 +1,24 @@
 from random import randint
 from graphics import *
+import heapq
 
 
-colors = {1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
+colors = {8192:"Navy", 4096:"Midnightblue", 2048:"darkred", 1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
+graphRect = []
+
+
+class HeapQueue: #Priority queue with heap as data structure
+    def __init__(self):
+        self.elements = []
+
+    def empty(self):
+        return len(self.elements) == 0
+
+    def put(self, item, priority): #adds element to the heap
+        heapq.heappush(self.elements, (priority, item))
+
+    def get(self): #returns the element with lowest value and removes it from the heap
+        return heapq.heappop(self.elements)[1]
 
 class Node:
     def __init__(self, xPos, yPos):
@@ -16,6 +32,7 @@ class Board:
     def __init__(self, size):
         self.size = size
         self.emptyNodes = []
+        self.heap = HeapQueue()
         self.nodes = []
 
         self.graphicRects = []
@@ -76,7 +93,7 @@ class Board:
     def updateBoard(self):
         for j in range(self.size):
             for i in range(self.size):
-                index = (i * self.size) + j
+                index = (j * self.size) + i
                 if self.graphicRects[index][1] != self.nodes[j][i].color:
                     self.graphicRects[index][0].setFill(self.nodes[j][i].color)
                     self.graphicRects[index][1] = self.nodes[j][i].color
@@ -191,6 +208,25 @@ class Board:
                         self.emptyNodes.append(self.nodes[j][i])
                     tempNode = self.nodes[index][i]
                     index -= 1
+
+    def findChildren(self):
+        # Find children
+        return
+
+    def addChildren(self):
+        self.findChildren()
+        self.heap()
+
+
+    def solver(self):
+        screenSize = 600
+        win = GraphWin("2048", screenSize, screenSize)
+        self.drawBoard(screenSize, win)
+        while len(self.emptyNodes) > 0:
+            self.addChildren()
+            self.nodes = self.heap.get()
+            self.updateBoard
+
 
 
 
