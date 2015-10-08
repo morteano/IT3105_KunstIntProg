@@ -39,9 +39,9 @@ class Board:
             node.value = 4
 
     def moveLeft(self):
-        tempValue = 0
-        index = 0
         for i in range(self.size):
+            tempValue = 0
+            index = 0
             for j in range(self.size):
                 if tempValue != 0:
                     if tempValue == self.nodes[i][j].value:
@@ -56,19 +56,76 @@ class Board:
                     tempNode = self.nodes[i][index]
                     index += 1
 
+    def moveRight(self):
+        for i in range(self.size):
+            tempValue = 0
+            index = self.size - 1
+            for j in range(self.size - 1, -1, -1):
+                if tempValue != 0:
+                    if tempValue == self.nodes[i][j].value:
+                        tempNode.value *= 2
+                        self.nodes[i][j].value = 0
+                        tempValue = 0
+                if self.nodes[i][j].value != 0:
+                    tempValue = self.nodes[i][j].value
+                    if j != index:
+                        self.nodes[i][index].value = self.nodes[i][j].value
+                        self.nodes[i][j].value = 0
+                    tempNode = self.nodes[i][index]
+                    index -= 1
+
+    def moveUp(self):
+        for i in range(self.size):
+            tempValue = 0
+            index = 0
+            for j in range(self.size):
+                if tempValue != 0:
+                    if tempValue == self.nodes[j][i].value:
+                        tempNode.value *= 2
+                        self.nodes[j][i].value = 0
+                        tempValue = 0
+                if self.nodes[j][i].value != 0:
+                    tempValue = self.nodes[j][i].value
+                    if j != index:
+                        self.nodes[index][i].value = self.nodes[j][i].value
+                        self.nodes[j][i].value = 0
+                    tempNode = self.nodes[index][i]
+                    index += 1
+
+    def moveDown(self):
+        for i in range(self.size):
+            tempValue = 0
+            index = self.size - 1
+            for j in range(self.size - 1, -1, -1):
+                if tempValue != 0:
+                    if tempValue == self.nodes[j][i].value:
+                        tempNode.value *= 2
+                        self.nodes[j][i].value = 0
+                        tempValue = 0
+                if self.nodes[j][i].value != 0:
+                    tempValue = self.nodes[j][i].value
+                    if j != index:
+                        self.nodes[index][i].value = self.nodes[j][i].value
+                        self.nodes[j][i].value = 0
+                    tempNode = self.nodes[index][i]
+                    index -= 1
 
 
 
 board = Board(4)
 board.printBoard()
 #board.spawn()
-board.setValue(0, 0, 4)
-board.setValue(0, 3, 2)
+board.setValue(0, 3, 8)
 board.setValue(0, 2, 2)
-board.setValue(0, 1, 4)
+board.setValue(0, 1, 2)
+board.setValue(0, 0, 2)
+board.setValue(3, 3, 16)
+board.setValue(2, 3, 16)
+board.setValue(2, 1, 2)
+
 print("")
 board.printBoard()
-board.moveLeft()
+board.moveDown()
 print("")
 board.printBoard()
 
