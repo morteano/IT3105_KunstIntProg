@@ -4,8 +4,6 @@ from Constraint import *
 from copy import deepcopy
 import heapq
 
-import time
-
 
 class Node:
 
@@ -30,12 +28,12 @@ class Block:
 
 class LineSegment:
     def __init__(self, row, col):
-        self.row = row
-        self.col = col
-        if self.row == -1:
-            self.text = 'c' + str(self.col)
+        self.rowNumber = row
+        self.colNumber = col
+        if self.rowNumber == -1:
+            self.text = 'c' + str(self.colNumber)
         else:
-            self.text = 'r' + str(self.row)
+            self.text = 'r' + str(self.rowNumber)
 
 
 class HeapQueue: #Priority queue with heap as data structure
@@ -69,8 +67,8 @@ def readCsp(textFile):
     numberOfRows = int(firstLine[1])
     global numberOfColumns
     numberOfColumns = int(firstLine[0])
-    domainX = range(numberOfColumns)
-    domainY = range(numberOfRows)
+    domainX = range(numberOfRows)
+    domainY = range(numberOfColumns)
 
     # Creates board
     for i in range(numberOfRows):
@@ -105,7 +103,7 @@ def readCsp(textFile):
 
         # Check if segment is the last
         if j.index == len(csp.variables) - 1:
-            csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + str(numberOfRows)))
+            csp.constraints[j].append(Constraint([j], j.text + ' + ' + str(j.length) + ' <= ' + str(numberOfColumns)))
         # Segment is in a row
         elif j.colNumber == -1:
             if j.rowNumber == csp.variables[j.index + 1].rowNumber:
@@ -156,20 +154,6 @@ def remove(row, columns, elementNrRow, elementNrCol):
 
 # Add domains to CSP
 def addDomains(segmentCsp, rowCsp):
-    # segment = 0
-    # for row in range(numberOfRows):
-    #     for seg in range(len(getVariablesInRow(segmentCsp, row))):
-    #         for start in segmentCsp.domains[segmentCsp.variables[segment+seg]]:
-    #             if seg == 0:
-    #                 domainRow = [0]*numberOfColumns
-    #             elif start - 1 == 1 or start - 2 == 1:
-    #                 break
-    #             for node in range(segmentCsp.variables[segment].length):
-    #                 domainRow[start+node] = 1
-    #         rowCsp.domains[rowCsp.variables[row]].append(domainRow)
-    #         print(domainRow)
-    #     segment += 1
-
     rows = [[0]*numberOfColumns]
     counter = 0
     for i in range(numberOfRows):
@@ -290,33 +274,18 @@ def drawNonogram(csp):
 
 def solveNonogram():
     # Find the segments in ech line
-    scenario = raw_input("Input file: ")
-    segmentCsp = readCsp(scenario)
+    segmentCsp = readCsp("scenario4")
     segmentCsp.initializeQueue()
     segmentCsp.domainFilter()
 
     # Make a cps where the segments from segmentCsp makes the domain
     lineCsp = changeFromSegmentsToRows(segmentCsp)
     lineCsp.initializeQueue()
+    lineCsp.domainFilter()
+    # print("After domainFilter:")
+    # for var in lineCsp.variables:
+    #     print lineCsp.domains[var]
 
-    graphicRects = []
-
-    win = GraphWin("Nonogram", 600, 600)
-    pixelSize = 600/max(numberOfColumns, numberOfRows)
-    for row in xrange(numberOfRows):
-        col = 0
-        for node in lineCsp.domains[lineCsp.variables[row]][0]:
-            rect = Rectangle(Point(pixelSize*col, 600-pixelSize*(row+1)), Point(pixelSize*col+pixelSize, 600-pixelSize*row))
-            if node == 1:
-                rect.setFill('blue')
-                graphicRects.append([rect, "blue"])
-            else:
-                rect.setFill('white')
-                graphicRects.append([rect, "white"])
-            rect.draw(win)
-            col += 1
-
-    lineCsp.domainFilterGraphics(numberOfRows, graphicRects)
     openCsps = HeapQueue()
 
     openCsps.put(lineCsp, heuristic(lineCsp))
@@ -327,40 +296,7 @@ def solveNonogram():
 
     cameFrom = {}
 
-    counter = 0
-
-    nodesSetFromStart = 0
-
-    for var in lineCsp.variables:
-        if len(lineCsp.domains[var]) == 1:
-            nodesSetFromStart += 1
-
-
-
-
-
     while not lineCsp.isSolved():
-        #print("counter", counter)
-        counter += 1
-        #time.sleep(1)
-        """i = 0
-        for row in xrange(numberOfRows):
-            col = 0
-            for node in lineCsp.domains[lineCsp.variables[row]][0]:
-                if node == 1:
-                    if graphicRects[i][1] == "white":
-                        graphicRects[i][0].setFill('blue')
-                        graphicRects[i][1] = "blue"
-                else:
-                    if graphicRects[i][1] == "blue":
-                        graphicRects[i][0].setFill('white')
-                        graphicRects[i][1] = "white"
-                #rect.draw(win)
-                col += 1
-                i += 1"""
-
-
-
         lineCsp = openCsps.get()
         numPoppedNodes += 1
 
@@ -373,18 +309,12 @@ def solveNonogram():
             nextCsp.domains[nextVar] = [nextCsp.domains[nextVar][i]]
             nextCsp.progress += 1
             nextCsp.rerun(nextVar)
-            nextCsp.domainFilterGraphics(numberOfRows, graphicRects)
+            nextCsp.domainFilter()
 
             numNodesInTree += 1
 
             cameFrom[nextCsp] = lineCsp
             openCsps.put(nextCsp, heuristic(nextCsp))
-
-    print("Number of generated nodes: " + str(numNodesInTree))
-    print("Number of expanded nodes: " + str(numPoppedNodes))
-    print("Number of nodes from start to solution: " + str(lineCsp.progress-nodesSetFromStart))
-    win.getMouse()
-    win.close()
 
     return lineCsp
 
@@ -392,3 +322,4 @@ def solveNonogram():
 csp = solveNonogram()
 #for var in csp.variables:
 #    print(var.row, var.col, csp.domains[var])
+drawNonogram(csp)
