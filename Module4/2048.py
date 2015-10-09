@@ -1,7 +1,8 @@
 from random import randint
 from graphics import *
 import heapq
-
+import time
+from copy import deepcopy
 
 colors = {8192:"Navy", 4096:"Midnightblue", 2048:"darkred", 1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
 graphRect = []
@@ -91,6 +92,7 @@ class Board:
 
 
     def updateBoard(self):
+        change = False
         for j in range(self.size):
             for i in range(self.size):
                 index = (j * self.size) + i
@@ -98,6 +100,8 @@ class Board:
                     self.graphicRects[index][0].setFill(self.nodes[j][i].color)
                     self.graphicRects[index][1] = self.nodes[j][i].color
                     self.graphicRects[index][2].setText(self.nodes[j][i].value)
+                    change = True
+        return change
 
     def move(self, direction):
         if direction == 'a':
@@ -228,8 +232,30 @@ class Board:
             self.updateBoard
 
 
-
+    def dummySolve(self):
+        screenSize = 600
+        win = GraphWin("2048", screenSize, screenSize)
+        self.spawn()
+        self.drawBoard(screenSize, win)
+        counter = 0
+        while True:
+            if counter%2 == 0:
+                self.move('s')
+            elif counter%101 == 0:
+                self.move('d')
+            else:
+                self.move('a')
+            if self.updateBoard():
+                self.spawn()
+            counter += 1
+            time.sleep(0.05)
+        win.getMouse()
 
 board = Board(4)
-board.game()
-
+#board.game()
+#board.dummySolve()
+board.spawn()
+board.printBoard()
+board.moveLeft()
+newBoard = deepcopy(board)
+newBoard.printBoard()
