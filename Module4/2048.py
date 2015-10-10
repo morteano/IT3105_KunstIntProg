@@ -4,6 +4,8 @@ import heapq
 import time
 from copy import deepcopy
 
+from Tree import *
+
 colors = {8192:"Navy", 4096:"Midnightblue", 2048:"darkred", 1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
 graphRect = []
 
@@ -21,7 +23,7 @@ class HeapQueue: #Priority queue with heap as data structure
     def get(self): #returns the element with lowest value and removes it from the heap
         return heapq.heappop(self.elements)[1]
 
-class Node:
+class Tile:
     def __init__(self, xPos, yPos):
         self.xPos = xPos
         self.yPos = yPos
@@ -33,15 +35,21 @@ class Board:
     def __init__(self, size):
         self.size = size
         self.emptyNodes = []
-        self.heap = HeapQueue()
         self.nodes = []
 
+        self.children = []
+        self.parent = None
+
+        self.heuristic = 0
+
         self.graphicRects = []
+
+        self.cameFrom = "qwerty"
 
         for i in xrange(size):
             row = []
             for j in xrange(size):
-                node = Node(i, j)
+                node = Tile(i, j)
                 row.append(node)
                 self.emptyNodes.append(node)
             self.nodes.append(row)
@@ -57,12 +65,15 @@ class Board:
         self.nodes[x][y].value = value
 
     def spawn(self):
-        node = self.emptyNodes.pop(randint(0, len(self.emptyNodes) - 1))
+        random = randint(0, len(self.emptyNodes) - 1)
+        node = self.emptyNodes.pop(random)
         if randint(0,9) < 9:
             node.value = 2
         else:
             node.value = 4
         node.color = colors[node.value]
+
+        return random, node.value
 
     def game(self):
         screenSize = 600
@@ -112,6 +123,7 @@ class Board:
             self.moveUp()
         elif direction == "s":
             self.moveDown()
+        self.cameFrom = direction
 
     def moveLeft(self):
         for i in range(self.size):
@@ -137,6 +149,7 @@ class Board:
                         self.emptyNodes.append(self.nodes[i][j])
                     tempNode = self.nodes[i][index]
                     index += 1
+        return self
 
     def moveRight(self):
         for i in range(self.size):
@@ -162,6 +175,7 @@ class Board:
                         self.emptyNodes.append(self.nodes[i][j])
                     tempNode = self.nodes[i][index]
                     index -= 1
+        return self
 
     def moveUp(self):
         for i in range(self.size):
@@ -187,6 +201,7 @@ class Board:
                         self.emptyNodes.append(self.nodes[j][i])
                     tempNode = self.nodes[index][i]
                     index += 1
+        return self
 
     def moveDown(self):
         for i in range(self.size):
@@ -212,50 +227,161 @@ class Board:
                         self.emptyNodes.append(self.nodes[j][i])
                     tempNode = self.nodes[index][i]
                     index -= 1
+        return self
 
-    def findChildren(self):
-        # Find children
-        return
+def legalMoves(board):
+    movable = False
+    for i in xrange(board.size-1):
+        for j in xrange(board.size):
+            if board.nodes[i][j].value == board.nodes[i+1][j].value:
+                movable = True
+    for i in xrange(board.size):
+        for j in xrange(board.size-1):
+            if board.nodes[i][j].value == board.nodes[i][j+1].value:
+                movable = True
+    return movable
 
-    def addChildren(self):
-        self.findChildren()
-        self.heap()
+def createAllPossibleBoards(board):
+    list = []
+    for i in board.emptyNodes:
+        child1 = deepcopy(board)
+        node1 = child1.nodes[i.xPos][i.yPos]
+        node1.value = 2
+        child1.emptyNodes.pop(child1.emptyNodes.index(node1))
+        child2 = deepcopy(board)
+        node2 = child2.nodes[i.xPos][i.yPos]
+        node2.value = 4
+        child2.emptyNodes.pop(child2.emptyNodes.index(node2))
+        list.append(child1)
+        list.append(child2)
+
+    return list
 
 
-    def solver(self):
-        screenSize = 600
-        win = GraphWin("2048", screenSize, screenSize)
-        self.drawBoard(screenSize, win)
-        while len(self.emptyNodes) > 0:
-            self.addChildren()
-            self.nodes = self.heap.get()
-            self.updateBoard
+def createTree(tree, depth, root):
+    if depth == 0:
+        return tree
 
+    for i in ["a", "d", "w", "s"]:
+        board = deepcopy(root)
+        board.move(i)
+        tree.addNode(board, root)
 
-    def dummySolve(self):
-        screenSize = 600
-        win = GraphWin("2048", screenSize, screenSize)
-        self.spawn()
-        self.drawBoard(screenSize, win)
-        counter = 0
-        while True:
-            if counter%2 == 0:
-                self.move('s')
-            elif counter%101 == 0:
-                self.move('d')
+    for i in tree.root.children:
+        children = createAllPossibleBoards(i)
+
+        for j in children:
+            tree.addNode(j, i)
+            return createTree(tree, depth - 2, j)
+
+def addToTree(tree, depth, root, extraDepth):
+    if depth == 0:
+        createTree(tree, extraDepth, root)
+    for i in root.children:
+        for j in i.children:
+            addToTree(tree, depth - 2, j, extraDepth - 2)
+
+def minimax(tree, depth, root):
+    maxHeuristic = 0
+    dir = ""
+    for i in root.children:
+        heurI = findHeuristic(tree, depth, i)
+        if  heurI > maxHeuristic:
+            maxHeuristic = heurI
+            dir = i.cameFrom
+    return dir
+
+def findHeuristic(tree, depth, root):
+    if depth == 0:
+        return heuristic(root)
+    elif depth%2 == 1:
+        heur = 0
+        for i in root.children:
+            it = 0
+            if it%2 == 0:
+                prob = 0.9
             else:
-                self.move('a')
-            if self.updateBoard():
-                self.spawn()
-            counter += 1
-            time.sleep(0.05)
-        win.getMouse()
+                prob = 0.1
+            it += 1
+            heur += findHeuristic(tree, depth-1, i)*prob
+        return heur
+    else:
+        for i in root.children:
+            return findHeuristic(tree, depth-1, i)
+
+
+def heuristic(board):
+    return 16-len(board.emptyNodes)
+
+
+def solver(board):
+    #screenSize = 600
+    #win = GraphWin("2048", screenSize, screenSize)
+    #board.drawBoard(screenSize, win)
+    currentBoard = board
+
+    heap = HeapQueue()
+
+    depth = 2
+
+    tree = Tree()
+    tree.addNode(currentBoard, None)
+    createTree(tree, depth, currentBoard)
+    tree.depth = depth
+    while True:
+        if len(currentBoard.emptyNodes) <= 0:
+            if not legalMoves(currentBoard):
+                break
+        currentBoard.move(minimax(tree, depth, currentBoard))
+
+        if currentBoard.cameFrom == "a":
+            currentChild = currentBoard.children[0]
+        elif currentBoard.cameFrom == "d":
+            currentChild = currentBoard.children[1]
+        elif currentBoard.cameFrom == "w":
+            currentChild = currentBoard.children[2]
+        else:
+            currentChild = currentBoard.children[3]
+
+        childIndex, value = currentChild.spawn()
+
+        print(len(currentChild.children))
+        print((childIndex * 2) + (value / 2) - 1)
+        root = currentChild.children[(childIndex * 2) + (value / 2) - 1]
+
+        tree.depth -= 2
+        extraDepth = 2
+        addToTree(tree, tree.depth, root, extraDepth)
+        tree.depth += extraDepth
+
+        currentBoard = deepcopy(root)
+        currentBoard.printBoard()
+        print("")
+        time.sleep(1)
+
+    #win.getMouse()
+    #win.close()
+
+
+"""def dummySolve():
+    screenSize = 600
+    win = GraphWin("2048", screenSize, screenSize)
+    self.spawn()
+    self.drawBoard(screenSize, win)
+    counter = 0
+    while True:
+        if counter%2 == 0:
+            self.move('s')
+        elif counter%101 == 0:
+            self.move('d')
+        else:
+            self.move('a')
+        if self.updateBoard():
+            self.spawn()
+        counter += 1
+        time.sleep(0.05)
+    win.getMouse()"""
 
 board = Board(4)
 #board.game()
-#board.dummySolve()
-board.spawn()
-board.printBoard()
-board.moveLeft()
-newBoard = deepcopy(board)
-newBoard.printBoard()
+solver(board)
