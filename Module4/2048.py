@@ -124,33 +124,8 @@ def moveDown(board):
                 index -= 1
     return board
 
-#     def moveDown(self):
-#         for i in range(self.size):
-#             tempValue = 0
-#             index = self.size - 1
-#             for j in range(self.size - 1, -1, -1):
-#                 if tempValue != 0:
-#                     if tempValue == self.nodes[j][i].value:
-#                         tempNode.value *= 2
-#                         tempNode.color = colors[tempNode.value]
-#                         self.nodes[j][i].value = 0
-#                         self.nodes[j][i].color = colors[self.nodes[j][i].value]
-#                         self.emptyNodes.append(self.nodes[j][i])
-#                         tempValue = 0
-#                 if self.nodes[j][i].value != 0:
-#                     tempValue = self.nodes[j][i].value
-#                     if j != index:
-#                         self.nodes[index][i].value = self.nodes[j][i].value
-#                         self.nodes[index][i].color = colors[self.nodes[index][i].value]
-#                         self.nodes[j][i].value = 0
-#                         self.nodes[j][i].color = colors[self.nodes[j][i].value]
-#                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[index][i]))
-#                         self.emptyNodes.append(self.nodes[j][i])
-#                     tempNode = self.nodes[index][i]
-#                     index -= 1
-#         return self
-
 def game(board):
+        window = GameWindow( )
         board = spawn(board)
         printBoard(board)
         while True:
@@ -158,6 +133,21 @@ def game(board):
             board = move(board, direction)
             board = spawn(board)
             printBoard(board)
+            window.update_view(board)
+
+
+def legalMoves(board):
+    movable = False
+    for i in xrange(boardSize-1):
+        for j in xrange(boardSize):
+            if board[boardSize*i+j] == board[boardSize*(i+1)+j]:
+                movable = True
+    for i in xrange(boardSize):
+        for j in xrange(boardSize-1):
+            if board[boardSize*i+j] == board[boardSize*i+j+1]:
+                movable = True
+    return movable
+
 
 
 # class Board:
@@ -183,29 +173,6 @@ def game(board):
 #                 self.emptyNodes.append(node)
 #             self.nodes.append(row)
 #
-#     def printBoard(self):
-#         for i in xrange(self.size):
-#             row = []
-#             for j in xrange(self.size):
-#                 row.append(self.nodes[i][j].value)
-#             print(row)
-#
-#     def setValue(self, x, y, value):
-#         self.nodes[x][y].value = value
-#
-#
-#     def game(self):
-#         screenSize = 600
-#         win = GraphWin("2048", screenSize, screenSize)
-#         self.spawn()
-#         self.drawBoard(screenSize, win)
-#         while True:
-#             direction = raw_input("Press direction (WASD): ")
-#             self.move(direction)
-#             self.spawn()
-#             self.updateBoard()
-#         win.getMouse()
-#         win.close()
 #
 #     def drawBoard(self, screenSize, win):
 #         for j in range(self.size):
@@ -234,121 +201,6 @@ def game(board):
 #         return change
 #
 #
-#     def moveLeft(self):
-#         for i in range(self.size):
-#             tempValue = 0
-#             index = 0
-#             for j in range(self.size):
-#                 if tempValue != 0:
-#                     if tempValue == self.nodes[i][j].value:
-#                         tempNode.value *= 2
-#                         tempNode.color = colors[tempNode.value]
-#                         self.nodes[i][j].value = 0
-#                         self.nodes[i][j].color = colors[self.nodes[i][j].value]
-#                         self.emptyNodes.append(self.nodes[i][j])
-#                         tempValue = 0
-#                 if self.nodes[i][j].value != 0:
-#                     tempValue = self.nodes[i][j].value
-#                     if j != index:
-#                         self.nodes[i][index].value = self.nodes[i][j].value
-#                         self.nodes[i][index].color = colors[self.nodes[i][index].value]
-#                         self.nodes[i][j].value = 0
-#                         self.nodes[i][j].color = colors[self.nodes[i][j].value]
-#                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[i][index]))
-#                         self.emptyNodes.append(self.nodes[i][j])
-#                     tempNode = self.nodes[i][index]
-#                     index += 1
-#         return self
-#
-#     def moveRight(self):
-#         for i in range(self.size):
-#             tempValue = 0
-#             index = self.size - 1
-#             for j in range(self.size - 1, -1, -1):
-#                 if tempValue != 0:
-#                     if tempValue == self.nodes[i][j].value:
-#                         tempNode.value *= 2
-#                         tempNode.color = colors[tempNode.value]
-#                         self.nodes[i][j].value = 0
-#                         self.nodes[i][j].color = colors[self.nodes[i][j].value]
-#                         self.emptyNodes.append(self.nodes[i][j])
-#                         tempValue = 0
-#                 if self.nodes[i][j].value != 0:
-#                     tempValue = self.nodes[i][j].value
-#                     if j != index:
-#                         self.nodes[i][index].value = self.nodes[i][j].value
-#                         self.nodes[i][index].color = colors[self.nodes[i][index].value]
-#                         self.nodes[i][j].value = 0
-#                         self.nodes[i][j].color = colors[self.nodes[i][j].value]
-#                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[i][index]))
-#                         self.emptyNodes.append(self.nodes[i][j])
-#                     tempNode = self.nodes[i][index]
-#                     index -= 1
-#         return self
-#
-#     def moveUp(self):
-#         for i in range(self.size):
-#             tempValue = 0
-#             index = 0
-#             for j in range(self.size):
-#                 if tempValue != 0:
-#                     if tempValue == self.nodes[j][i].value:
-#                         tempNode.value *= 2
-#                         tempNode.color = colors[tempNode.value]
-#                         self.nodes[j][i].value = 0
-#                         self.nodes[j][i].color = colors[self.nodes[j][i].value]
-#                         self.emptyNodes.append(self.nodes[j][i])
-#                         tempValue = 0
-#                 if self.nodes[j][i].value != 0:
-#                     tempValue = self.nodes[j][i].value
-#                     if j != index:
-#                         self.nodes[index][i].value = self.nodes[j][i].value
-#                         self.nodes[index][i].color = colors[self.nodes[index][i].value]
-#                         self.nodes[j][i].value = 0
-#                         self.nodes[j][i].color = colors[self.nodes[j][i].value]
-#                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[index][i]))
-#                         self.emptyNodes.append(self.nodes[j][i])
-#                     tempNode = self.nodes[index][i]
-#                     index += 1
-#         return self
-#
-#     def moveDown(self):
-#         for i in range(self.size):
-#             tempValue = 0
-#             index = self.size - 1
-#             for j in range(self.size - 1, -1, -1):
-#                 if tempValue != 0:
-#                     if tempValue == self.nodes[j][i].value:
-#                         tempNode.value *= 2
-#                         tempNode.color = colors[tempNode.value]
-#                         self.nodes[j][i].value = 0
-#                         self.nodes[j][i].color = colors[self.nodes[j][i].value]
-#                         self.emptyNodes.append(self.nodes[j][i])
-#                         tempValue = 0
-#                 if self.nodes[j][i].value != 0:
-#                     tempValue = self.nodes[j][i].value
-#                     if j != index:
-#                         self.nodes[index][i].value = self.nodes[j][i].value
-#                         self.nodes[index][i].color = colors[self.nodes[index][i].value]
-#                         self.nodes[j][i].value = 0
-#                         self.nodes[j][i].color = colors[self.nodes[j][i].value]
-#                         self.emptyNodes.pop(self.emptyNodes.index(self.nodes[index][i]))
-#                         self.emptyNodes.append(self.nodes[j][i])
-#                     tempNode = self.nodes[index][i]
-#                     index -= 1
-#         return self
-#
-# def legalMoves(board):
-#     movable = False
-#     for i in xrange(board.size-1):
-#         for j in xrange(board.size):
-#             if board.nodes[i][j].value == board.nodes[i+1][j].value:
-#                 movable = True
-#     for i in xrange(board.size):
-#         for j in xrange(board.size-1):
-#             if board.nodes[i][j].value == board.nodes[i][j+1].value:
-#                 movable = True
-#     return movable
 #
 # def createAllPossibleBoards(board):
 #     list = []
