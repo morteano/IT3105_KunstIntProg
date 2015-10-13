@@ -188,7 +188,7 @@ def minimax(depth, root):
     bestIndex = 0
     index = 0
     for i in root.children:
-        heurI = findHeuristic(depth-1, i)
+        heurI = findHeuristic(depth-1, i, 0)
         if  heurI > maxHeuristic:
             maxHeuristic = heurI
             dir = i.lastMove
@@ -196,11 +196,9 @@ def minimax(depth, root):
         index += 1
     return dir, bestIndex
 
-def findHeuristic(depth, root):
-    heur = 0
+def findHeuristic(depth, root, heur):
     if depth == 0:
-        print("Heur: ", heur+heuristic(root.board))
-        return heur + heuristic(root.board)
+        return heur + heuristic3(root.board)
     elif depth % 2 == 1:
         it = 0
         for i in root.children:
@@ -209,11 +207,11 @@ def findHeuristic(depth, root):
             else:
                 prob = 0.1
             it += 1
-            heur += (findHeuristic(depth-1, i)*prob)/len(root.children)
+            heur += (findHeuristic(depth-1, i, heur)*prob)/len(root.children)
         return heur
     else:
         for i in root.children:
-            heur += findHeuristic(depth-1, i)/len(root.children)
+            heur += findHeuristic(depth-1, i, heur)/len(root.children)
         return heur
 
 def heuristic(board):
@@ -235,16 +233,23 @@ def heuristic2(board):
         temp2Board[nextIndex] = 0
         next2Index = board.index(max(tempBoard))
         if nextIndex == 1 and next2Index == 4 or next2Index == 1 and nextIndex == 4:
-            empty -= 700
+            empty -= 100
         elif nextIndex == 1 or nextIndex == 4:
-            empty += 2000
-        if next2Index == 5:
             empty += 500
+        if next2Index == 5:
+            empty += 400
 
     for i in range(len(board)):
         if board[i] == 0:
             empty += 500
     return empty
+
+def heuristic3(board):
+    heur = 10*board[0]+5*board[1]+5*board[4]+3*board[5]
+    for i in range(len(board)):
+        if board[i] == 0:
+            heur += 5
+    return heur
 
 
 def addRelations(depth, root):
@@ -267,6 +272,14 @@ def addRelations(depth, root):
             addRelations(depth - 2, j)
 
 
+def removeRelations(root):
+    for i in root.children:
+        for j in i.children:
+            j.children = []
+        i.children = []
+    root = None
+
+
 def solver(board):
     board, random, value = spawn(board)
     gui = getNewBoardWindow(4, None)
@@ -274,18 +287,6 @@ def solver(board):
 
     node = Node(board, None)
     addRelations(depth, node)
-    print("Children: ", len(node.children))
-    grandchildren = 0
-    for i in node.children:
-        grandchildren += len(i.children)
-    print("Grandchildren: ", grandchildren)
-
-    greatgrandchildren = 0
-    for i in node.children:
-        for j in i.children:
-            greatgrandchildren += len(j.children)
-    print("Greatgrandchildren: ", greatgrandchildren)
-
 
     full = False
     while True:
@@ -299,12 +300,20 @@ def solver(board):
             if not legalMoves(board):
                 print("Trying to break")
                 break
+        elif empty < 2:
+            depth = 8
+        elif empty < 5 and max(board) > 64:
+            depth = 6
+        else:
+            depth = 4
+
+        oldNode = node
         dir, index = minimax(depth, node)
         board, modified = move(board, dir)
         board, childIndex, value = spawn(board)
-        node = node.children[index].children[(childIndex * 2) + (value / 2) - 1]
-        tree = Tree()
-        tree.addNode(node, None)
+        node = oldNode.children[index].children[(childIndex * 2) + (value / 2) - 1]
+        node.parent = None
+        removeRelations(oldNode)
         addRelations(depth, node)
         gui.drawBoard(node.board)
         #time.sleep(0.1)
