@@ -1,10 +1,11 @@
-from random import randint
+from random import randint, random, choice
 from graphics import *
 import heapq
 import time
 from copy import deepcopy
 from visuals import GameWindow
 from Tree import *
+from GUI import *
 
 
 class Node:
@@ -27,6 +28,7 @@ def printBoard(board):
         for j in xrange(boardSize):
             row.append(board[boardSize*i+j])
         print(row)
+    print(" ")
 
 # Spawns a tile with 0.9 prob of being 2, 0.1 prob of being 4 in an empty tile
 def spawn(board):
@@ -134,15 +136,19 @@ def moveDown(board):
 
 
 def game(board):
-        window = GameWindow( )
+        # window = GameWindow( )
         board = spawn(board)
         printBoard(board)
+        gui = getNewBoardWindow(4, None)
         while True:
             direction = raw_input("Press direction (WASD): ")
             board = move(board, direction)
             board = spawn(board)
             printBoard(board)
-            window.update_view(board)
+            time.sleep(0.5)
+            # window.update_view(board)
+
+            gui.drawBoard(board)
 
 
 def legalMoves(board):
@@ -170,32 +176,29 @@ def createTree(tree, depth, root):
     if depth == 0:
         return tree
     for i in ["a", "d", "w", "s"]:
-        board
-        move(board, i)
-        tree.addNode(board, root)
+        board = deepcopy(root.board)
+        board = move(board, i)
+        tree.addNode(Node(board, root, i), root)
 
     for i in tree.root.children:
         children = createAllPossibleBoards(i)
-        childrenNodes = []
-        for child in children:
-            childrenNodes.append(Node(child, i, i.lastMove))
 
-        for j in childrenNodes:
+        for j in children:
             tree.addNode(j, i)
-            createTree(tree, depth - 2, j)
+            tree = createTree(tree, depth - 2, j)
+    return tree
 
-
-def createAllPossibleBoards(board):
+def createAllPossibleBoards(node):
     emptyNodes = []
-    for i in range(len(board)):
-        if board[i] == 0:
+    for i in range(len(node.board)):
+        if node.board[i] == 0:
             emptyNodes.append(i)
     list = []
     for i in emptyNodes:
-        child1 = board
-        child1[i] = 2
-        child2 = board
-        child2[i] = 4
+        child1 = Node(deepcopy(node.board), node, node.lastMove)
+        child1.board[i] = 2
+        child2 = Node(deepcopy(node.board), node, node.lastMove)
+        child2.board[i] = 4
         list.append(child1)
         list.append(child2)
     return list
@@ -205,16 +208,17 @@ def minimax(tree, depth, root):
     maxHeuristic = 0
     dir = ""
     for i in root.children:
-        heurI = findHeuristic(tree, depth, i)
+        heurI = findHeuristic(tree, depth-1, i)
+        print(i.lastMove, heurI)
         if  heurI > maxHeuristic:
             maxHeuristic = heurI
-            dir = i.cameFrom
+            dir = i.lastMove
     return dir
 
 def findHeuristic(tree, depth, root):
     if depth == 0:
         return heuristic(root.board)
-    elif depth%2 == 1:
+    elif depth % 2 == 1:
         heur = 0
         for i in root.children:
             it = 0
@@ -223,7 +227,7 @@ def findHeuristic(tree, depth, root):
             else:
                 prob = 0.1
             it += 1
-            heur += findHeuristic(tree, depth-1, i)*prob
+            heur += (findHeuristic(tree, depth-1, i)*prob)/len(root.children)
         return heur
     else:
         for i in root.children:
@@ -235,48 +239,33 @@ def heuristic(board):
     for i in range(len(board)):
         if board[i] == 0:
             empty += 1
-    return 16-empty
+    return empty
 
 def solver(board):
-    currentBoard = board
-
+    board = spawn(board)
+    gui = getNewBoardWindow(4, None)
     depth = 2
 
     tree = Tree()
-    tree.addNode(Node(currentBoard, None, None), None)
-    createTree(tree, depth, currentBoard)
+    node = Node(board, None, None)
+    tree.addNode(node, None)
+    tree = createTree(tree, depth, node)
     tree.depth = depth
     while True:
-        if not legalMoves(currentBoard):
+        if not legalMoves(board):
             break
-        move(currentBoard, minimax(tree, depth, currentBoard))
-
-        if currentBoard.cameFrom == "a":
-            currentChild = currentBoard.children[0]
-        elif currentBoard.cameFrom == "d":
-            currentChild = currentBoard.children[1]
-        elif currentBoard.cameFrom == "w":
-            currentChild = currentBoard.children[2]
-        else:
-            currentChild = currentBoard.children[3]
-
-        childIndex, value = currentChild.spawn()
-        print("1")
-        root = currentChild.children[(childIndex * 2) + (value / 2) - 1]
-        tree.depth -= 2
-        extraDepth = 2
-        print("2")
-        #addToTree(tree, tree.depth, root, extraDepth)
-        tree.reset()
-        tree.addNode(root, None)
-        print("Start")
-        createTree(tree, depth, root)
-        print("End")
-        tree.depth += extraDepth
-        print("3")
-        currentBoard = deepcopy(root)
-        currentBoard.printBoard()
-        print("")
+        dir = minimax(tree, depth, node)
+        printBoard(board)
+        print("Equals")
+        print(dir)
+        board = move(board, dir)
+        printBoard(board)
+        board = spawn(board)
+        #node = Node(board, None, dir)
+        node.board = board
+        tree = createTree(tree, depth, node)
+        gui.drawBoard(node.board)
+        print(dir)
         time.sleep(1)
 
     #win.getMouse()
@@ -320,5 +309,6 @@ def solver(board):
 #          0,2,0,2,
 #          2,0,2,0,
 #          2,0,4,2,]
+
 
 solver(board)

@@ -1,23 +1,23 @@
 import math
 
-class Node:
-
-    def __init__(self, object):
-        self.parent = None
-        self.children = []
-        self.object = object
-
-    def getParent(self):
-        return self.parent
-
-    def getChildren(self):
-        return self.children
-
-    def setParent(self, node):
-        self.parent = node
-
-    def addChild(self, node):
-        self.children.append(node)
+# class Node:
+#
+#     def __init__(self, object):
+#         self.parent = None
+#         self.children = []
+#         self.object = object
+#
+#     def getParent(self):
+#         return self.parent
+#
+#     def getChildren(self):
+#         return self.children
+#
+#     def setParent(self, node):
+#         self.parent = node
+#
+#     def addChild(self, node):
+#         self.children.append(node)
 
 class Tree:
 
