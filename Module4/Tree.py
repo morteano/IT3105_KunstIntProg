@@ -38,6 +38,15 @@ class Tree:
             node.parent = parentNode
             parentNode.children.append(node)
 
+    def reset(self):
+        for i in self.nodes:
+            i.children = []
+            i.parent = None
+        self.nodes = []
+        self.root = None
+        self.size = 0.0
+        self.depth = 0
+
 
 
 

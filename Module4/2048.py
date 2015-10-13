@@ -260,26 +260,25 @@ def createAllPossibleBoards(board):
 
 def createTree(tree, depth, root):
     if depth == 0:
-        return tree
+        return
 
     for i in ["a", "d", "w", "s"]:
         board = deepcopy(root)
         board.move(i)
         tree.addNode(board, root)
-
-    for i in tree.root.children:
+    for i in root.children:
         children = createAllPossibleBoards(i)
-
         for j in children:
             tree.addNode(j, i)
-            return createTree(tree, depth - 2, j)
+            createTree(tree, depth - 2, j)
 
-def addToTree(tree, depth, root, extraDepth):
+
+"""def addToTree(tree, depth, root, extraDepth):
     if depth == 0:
         createTree(tree, extraDepth, root)
     for i in root.children:
         for j in i.children:
-            addToTree(tree, depth - 2, j, extraDepth - 2)
+            addToTree(tree, depth - 2, j, extraDepth - 2)"""
 
 def minimax(tree, depth, root):
     maxHeuristic = 0
@@ -325,10 +324,14 @@ def solver(board):
     depth = 2
 
     tree = Tree()
-    tree.addNode(currentBoard, None)
-    createTree(tree, depth, currentBoard)
-    tree.depth = depth
+
+
     while True:
+
+        tree.addNode(currentBoard, None)
+        createTree(tree, depth, currentBoard)
+        tree.depth = depth
+
         if len(currentBoard.emptyNodes) <= 0:
             if not legalMoves(currentBoard):
                 break
@@ -345,22 +348,19 @@ def solver(board):
 
         childIndex, value = currentChild.spawn()
 
-        print(len(currentChild.children))
-        print((childIndex * 2) + (value / 2) - 1)
+
         root = currentChild.children[(childIndex * 2) + (value / 2) - 1]
 
-        tree.depth -= 2
-        extraDepth = 2
-        addToTree(tree, tree.depth, root, extraDepth)
-        tree.depth += extraDepth
+        tree.reset()
 
         currentBoard = deepcopy(root)
+        createTree(tree, depth, currentBoard)
         currentBoard.printBoard()
         print("")
         time.sleep(1)
 
     #win.getMouse()
-    #win.close()
+    #win.close()"""
 
 
 """def dummySolve():
@@ -383,5 +383,6 @@ def solver(board):
     win.getMouse()"""
 
 board = Board(4)
+board.spawn()
 #board.game()
 solver(board)
