@@ -9,9 +9,8 @@ from GUI import *
 
 
 class Node:
-    def __init__(self, board, parent, lastMove):
+    def __init__(self, board, lastMove):
         self.board = board
-        self.parent = parent
         self.lastMove = lastMove
         self.children = []
 
@@ -167,31 +166,6 @@ def legalMoves(board):
     return movable
 
 
-def addToTree(tree, depth, root, extraDepth):
-    if depth == 0:
-        createTree(tree, extraDepth, root)
-    for i in root.children:
-        for j in i.children:
-            addToTree(tree, depth - 2, j, extraDepth - 2)
-
-
-def createTree(tree, depth, root):
-    if depth == 0:
-        return tree
-    for i in ["a", "d", "w", "s"]:
-        board = list(root.board)
-        board, modified = move(board, i)
-        if modified:
-            tree.addNode(Node(board, root, i), root)
-
-    for i in tree.root.children:
-        children = createAllPossibleBoards(i)
-
-        for j in children:
-            tree.addNode(j, i)
-            tree = createTree(tree, depth - 2, j)
-    return tree
-
 def createAllPossibleBoards(node):
     emptyNodes = []
     for i in range(len(node.board)):
@@ -199,47 +173,47 @@ def createAllPossibleBoards(node):
             emptyNodes.append(i)
     nodeList = []
     for i in emptyNodes:
-        child1 = Node(list(node.board), node, node.lastMove)
+        child1 = Node(list(node.board), node.lastMove)
         child1.board[i] = 2
-        child2 = Node(list(node.board), node, node.lastMove)
+        child2 = Node(list(node.board), node.lastMove)
         child2.board[i] = 4
         nodeList.append(child1)
         nodeList.append(child2)
     return nodeList
 
 
-def minimax(tree, depth, root):
+def minimax(depth, root):
     maxHeuristic = -1
     dir = ""
     bestIndex = 0
     index = 0
-    print len(root.children)
     for i in root.children:
-        heurI = findHeuristic(depth-1, i, 0)
+        heurI = findHeuristic(depth-1, i)
         if  heurI > maxHeuristic:
             maxHeuristic = heurI
             dir = i.lastMove
             bestIndex = index
         index += 1
-    print(dir)
     return dir, bestIndex
 
-def findHeuristic(depth, root, heur):
+def findHeuristic(depth, root):
+    heur = 0
     if depth == 0:
+        print("Heur: ", heur+heuristic(root.board))
         return heur + heuristic(root.board)
     elif depth % 2 == 1:
+        it = 0
         for i in root.children:
-            it = 0
             if it%2 == 0:
                 prob = 0.9
             else:
                 prob = 0.1
             it += 1
-            heur += (findHeuristic(depth-1, i, heur)*prob)/len(root.children)
+            heur += (findHeuristic(depth-1, i)*prob)/len(root.children)
         return heur
     else:
         for i in root.children:
-            heur += findHeuristic(depth-1, i, heur)/len(root.children)
+            heur += findHeuristic(depth-1, i)/len(root.children)
         return heur
 
 def heuristic(board):
@@ -249,16 +223,70 @@ def heuristic(board):
             empty += 1
     return empty
 
+def heuristic2(board):
+    empty = 0
+    index = board.index(max(board))
+    if index == 0 or max(board) == 3 or max(board) == 12 or max(board) == 15:
+        empty = 10000
+        tempBoard = list(board)
+        tempBoard[index] = 0
+        nextIndex = board.index(max(tempBoard))
+        temp2Board = list(board)
+        temp2Board[nextIndex] = 0
+        next2Index = board.index(max(tempBoard))
+        if nextIndex == 1 and next2Index == 4 or next2Index == 1 and nextIndex == 4:
+            empty -= 700
+        elif nextIndex == 1 or nextIndex == 4:
+            empty += 2000
+        if next2Index == 5:
+            empty += 500
+
+    for i in range(len(board)):
+        if board[i] == 0:
+            empty += 500
+    return empty
+
+
+def addRelations(depth, root):
+    if depth == 0:
+        return
+    for i in ["a", "d", "w", "s"]:
+        board = list(root.board)
+        board, modified = move(board, i)
+        if modified:
+            node = Node(board, i)
+            node.parent = root
+            root.children.append(node)
+
+    for i in root.children:
+        children = createAllPossibleBoards(i)
+
+        for j in children:
+            j.parent = i
+            i.children.append(j)
+            addRelations(depth - 2, j)
+
+
 def solver(board):
     board, random, value = spawn(board)
     gui = getNewBoardWindow(4, None)
-    depth = 2
+    depth = 4
 
-    tree = Tree()
-    node = Node(board, None, None)
-    tree.addNode(node, None)
-    tree = createTree(tree, depth, node)
-    tree.depth = depth
+    node = Node(board, None)
+    addRelations(depth, node)
+    print("Children: ", len(node.children))
+    grandchildren = 0
+    for i in node.children:
+        grandchildren += len(i.children)
+    print("Grandchildren: ", grandchildren)
+
+    greatgrandchildren = 0
+    for i in node.children:
+        for j in i.children:
+            greatgrandchildren += len(j.children)
+    print("Greatgrandchildren: ", greatgrandchildren)
+
+
     full = False
     while True:
         empty = 0
@@ -267,31 +295,19 @@ def solver(board):
                 empty += 1
         if empty == 0:
             print("full board")
+            printBoard(board)
             if not legalMoves(board):
                 print("Trying to break")
                 break
-        dir, index = minimax(tree, depth, node)
-        printBoard(board)
-        print dir
+        dir, index = minimax(depth, node)
         board, modified = move(board, dir)
         board, childIndex, value = spawn(board)
-        if dir == "a":
-            child = 0
-        elif dir == "d":
-            child = 1
-        elif dir == "w":
-            child = 2
-        elif dir == "s":
-            child = 3
-        else:
-            print("Error....")
-        print (childIndex * 2) + (value / 2) - 1
         node = node.children[index].children[(childIndex * 2) + (value / 2) - 1]
         tree = Tree()
         tree.addNode(node, None)
-        tree = createTree(tree, depth, node)
+        addRelations(depth, node)
         gui.drawBoard(node.board)
-        #time.sleep(0.5)
+        #time.sleep(0.1)
     print("Escaped the while loop!")
     #win.getMouse()
     #win.close()
@@ -335,4 +351,15 @@ def solver(board):
 #          2,0,2,0,
 #          2,0,4,2,]
 
+
 solver(board)
+
+def test(depth, res):
+    if depth == 0:
+        return 5
+    if depth % 2 == 1:
+        res += test(depth-1, res)
+        return res
+    else:
+        res += test(depth-1, res)
+        return res
