@@ -45,6 +45,8 @@ def spawn(board):
 
 
 def move(board, direction):
+    oldBoard = list(board)
+    modified = False
     if direction == 'a':
         board = moveLeft(board)
     elif direction == "d":
@@ -53,7 +55,9 @@ def move(board, direction):
         board = moveUp(board)
     elif direction == "s":
         board = moveDown(board)
-    return board
+    if oldBoard != board:
+        modified = True
+    return board, modified
 
 
 def moveLeft(board):
@@ -176,8 +180,9 @@ def createTree(tree, depth, root):
         return tree
     for i in ["a", "d", "w", "s"]:
         board = list(root.board)
-        board = move(board, i)
-        tree.addNode(Node(board, root, i), root)
+        board, modified = move(board, i)
+        if modified:
+            tree.addNode(Node(board, root, i), root)
 
     for i in tree.root.children:
         children = createAllPossibleBoards(i)
@@ -206,17 +211,22 @@ def createAllPossibleBoards(node):
 def minimax(tree, depth, root):
     maxHeuristic = -1
     dir = ""
+    bestIndex = 0
+    index = 0
+    print len(root.children)
     for i in root.children:
-        heurI = findHeuristic(depth-1, i)
+        heurI = findHeuristic(depth-1, i, 0)
         if  heurI > maxHeuristic:
             maxHeuristic = heurI
             dir = i.lastMove
-    return dir
+            bestIndex = index
+        index += 1
+    print(dir)
+    return dir, bestIndex
 
-def findHeuristic(depth, root):
-    heur = 0
+def findHeuristic(depth, root, heur):
     if depth == 0:
-        return heuristic(root.board)
+        return heur + heuristic(root.board)
     elif depth % 2 == 1:
         for i in root.children:
             it = 0
@@ -225,12 +235,12 @@ def findHeuristic(depth, root):
             else:
                 prob = 0.1
             it += 1
-            heur += (findHeuristic(depth-1, i)*prob)/len(root.children)
+            heur += (findHeuristic(depth-1, i, heur)*prob)/len(root.children)
         return heur
     else:
         for i in root.children:
-            heur += findHeuristic(depth-1, i)/len(root.children)
-            return heur
+            heur += findHeuristic(depth-1, i, heur)/len(root.children)
+        return heur
 
 def heuristic(board):
     empty = 0
@@ -260,8 +270,10 @@ def solver(board):
             if not legalMoves(board):
                 print("Trying to break")
                 break
-        dir = minimax(tree, depth, node)
-        board = move(board, dir)
+        dir, index = minimax(tree, depth, node)
+        printBoard(board)
+        print dir
+        board, modified = move(board, dir)
         board, childIndex, value = spawn(board)
         if dir == "a":
             child = 0
@@ -273,12 +285,13 @@ def solver(board):
             child = 3
         else:
             print("Error....")
-        node = node.children[child].children[(childIndex * 2) + (value / 2) - 1]
+        print (childIndex * 2) + (value / 2) - 1
+        node = node.children[index].children[(childIndex * 2) + (value / 2) - 1]
         tree = Tree()
         tree.addNode(node, None)
         tree = createTree(tree, depth, node)
         gui.drawBoard(node.board)
-        time.sleep(0.5)
+        #time.sleep(0.5)
     print("Escaped the while loop!")
     #win.getMouse()
     #win.close()
@@ -321,6 +334,5 @@ def solver(board):
 #          0,2,0,2,
 #          2,0,2,0,
 #          2,0,4,2,]
-
 
 solver(board)
