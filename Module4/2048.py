@@ -4,8 +4,15 @@ import heapq
 import time
 from copy import deepcopy
 from visuals import GameWindow
-
 from Tree import *
+
+
+class Node:
+    def __init__(self, board, parent, lastMove):
+        self.board = board
+        self.parent = parent
+        self.lastMove = lastMove
+        self.children = []
 
 boardSize = 4
 board = [0, 0, 0, 0,
@@ -105,6 +112,7 @@ def moveUp(board):
                 index += 1
     return board
 
+
 def moveDown(board):
     for i in range(boardSize):
         tempValue = 0
@@ -123,6 +131,7 @@ def moveDown(board):
                 tempNodeIndex = boardSize*index+i
                 index -= 1
     return board
+
 
 def game(board):
         window = GameWindow( )
@@ -149,184 +158,129 @@ def legalMoves(board):
     return movable
 
 
+def addToTree(tree, depth, root, extraDepth):
+    if depth == 0:
+        createTree(tree, extraDepth, root)
+    for i in root.children:
+        for j in i.children:
+            addToTree(tree, depth - 2, j, extraDepth - 2)
 
-# class Board:
-#     def __init__(self, size):
-#         self.size = size
-#         self.emptyNodes = []
-#         self.nodes = []
-#
-#         self.children = []
-#         self.parent = None
-#
-#         self.heuristic = 0
-#
-#         self.graphicRects = []
-#
-#         self.cameFrom = "qwerty"
-#
-#         for i in xrange(size):
-#             row = []
-#             for j in xrange(size):
-#                 node = Tile(i, j)
-#                 row.append(node)
-#                 self.emptyNodes.append(node)
-#             self.nodes.append(row)
-#
-#
-#     def drawBoard(self, screenSize, win):
-#         for j in range(self.size):
-#             for i in range(self.size):
-#                 rect = Rectangle(Point(i*screenSize/self.size, j*screenSize/self.size),Point((i+1)*screenSize/self.size, (j+1)*screenSize/self.size))
-#                 rect.setFill(self.nodes[j][i].color)
-#                 rect.setFill(colors[self.nodes[j][i].value])
-#                 value = Text(Point((i+0.5)*screenSize/self.size, (j+0.5)*screenSize/self.size), self.nodes[j][i].value)
-#                 self.graphicRects.append([rect, self.nodes[j][i].color, value])
-#                 rect.draw(win)
-#                 #if self.nodes[j][i].value != 0:
-#                 value.draw(win)
-#
-#
-#
-#     def updateBoard(self):
-#         change = False
-#         for j in range(self.size):
-#             for i in range(self.size):
-#                 index = (j * self.size) + i
-#                 if self.graphicRects[index][1] != self.nodes[j][i].color:
-#                     self.graphicRects[index][0].setFill(self.nodes[j][i].color)
-#                     self.graphicRects[index][1] = self.nodes[j][i].color
-#                     self.graphicRects[index][2].setText(self.nodes[j][i].value)
-#                     change = True
-#         return change
-#
-#
-#
-# def createAllPossibleBoards(board):
-#     list = []
-#     for i in board.emptyNodes:
-#         child1 = deepcopy(board)
-#         node1 = child1.nodes[i.xPos][i.yPos]
-#         node1.value = 2
-#         child1.emptyNodes.pop(child1.emptyNodes.index(node1))
-#         child2 = deepcopy(board)
-#         node2 = child2.nodes[i.xPos][i.yPos]
-#         node2.value = 4
-#         child2.emptyNodes.pop(child2.emptyNodes.index(node2))
-#         list.append(child1)
-#         list.append(child2)
-#
-#     return list
-#
-#
-# def createTree(tree, depth, root):
-#     if depth == 0:
-#         return tree
-#
-#     for i in ["a", "d", "w", "s"]:
-#         board = deepcopy(root)
-#         board.move(i)
-#         tree.addNode(board, root)
-#
-#     for i in tree.root.children:
-#         children = createAllPossibleBoards(i)
-#
-#         for j in children:
-#             tree.addNode(j, i)
-#             createTree(tree, depth - 2, j)
-#
-# def addToTree(tree, depth, root, extraDepth):
-#     if depth == 0:
-#         print("Start")
-#         createTree(tree, extraDepth, root)
-#         print("End")
-#     for i in root.children:
-#         for j in i.children:
-#             addToTree(tree, depth - 2, j, extraDepth - 2)
-#
-# def minimax(tree, depth, root):
-#     maxHeuristic = 0
-#     dir = ""
-#     for i in root.children:
-#         heurI = findHeuristic(tree, depth, i)
-#         if  heurI > maxHeuristic:
-#             maxHeuristic = heurI
-#             dir = i.cameFrom
-#     return dir
-#
-# def findHeuristic(tree, depth, root):
-#     if depth == 0:
-#         return heuristic(root)
-#     elif depth%2 == 1:
-#         heur = 0
-#         for i in root.children:
-#             it = 0
-#             if it%2 == 0:
-#                 prob = 0.9
-#             else:
-#                 prob = 0.1
-#             it += 1
-#             heur += findHeuristic(tree, depth-1, i)*prob
-#         return heur
-#     else:
-#         for i in root.children:
-#             return findHeuristic(tree, depth-1, i)
-#
-#
-# def heuristic(board):
-#     return 16-len(board.emptyNodes)
-#
-#
-# def solver(board):
-#     #screenSize = 600
-#     #win = GraphWin("2048", screenSize, screenSize)
-#     #board.drawBoard(screenSize, win)
-#     currentBoard = board
-#
-#     heap = HeapQueue()
-#
-#     depth = 2
-#
-#     tree = Tree()
-#     tree.addNode(currentBoard, None)
-#     createTree(tree, depth, currentBoard)
-#     tree.depth = depth
-#     while True:
-#         if len(currentBoard.emptyNodes) <= 0:
-#             if not legalMoves(currentBoard):
-#                 break
-#         currentBoard.move(minimax(tree, depth, currentBoard))
-#
-#         if currentBoard.cameFrom == "a":
-#             currentChild = currentBoard.children[0]
-#         elif currentBoard.cameFrom == "d":
-#             currentChild = currentBoard.children[1]
-#         elif currentBoard.cameFrom == "w":
-#             currentChild = currentBoard.children[2]
-#         else:
-#             currentChild = currentBoard.children[3]
-#
-#         childIndex, value = currentChild.spawn()
-#         print("1")
-#         root = currentChild.children[(childIndex * 2) + (value / 2) - 1]
-#         tree.depth -= 2
-#         extraDepth = 2
-#         print("2")
-#         #addToTree(tree, tree.depth, root, extraDepth)
-#         tree.reset()
-#         tree.addNode(root, None)
-#         print("Start")
-#         createTree(tree, depth, root)
-#         print("End")
-#         tree.depth += extraDepth
-#         print("3")
-#         currentBoard = deepcopy(root)
-#         currentBoard.printBoard()
-#         print("")
-#         time.sleep(1)
-#
-#     #win.getMouse()
-#     #win.close()
+
+def createTree(tree, depth, root):
+    if depth == 0:
+        return tree
+    for i in ["a", "d", "w", "s"]:
+        board
+        move(board, i)
+        tree.addNode(board, root)
+
+    for i in tree.root.children:
+        children = createAllPossibleBoards(i)
+        childrenNodes = []
+        for child in children:
+            childrenNodes.append(Node(child, i, i.lastMove))
+
+        for j in childrenNodes:
+            tree.addNode(j, i)
+            createTree(tree, depth - 2, j)
+
+
+def createAllPossibleBoards(board):
+    emptyNodes = []
+    for i in range(len(board)):
+        if board[i] == 0:
+            emptyNodes.append(i)
+    list = []
+    for i in emptyNodes:
+        child1 = board
+        child1[i] = 2
+        child2 = board
+        child2[i] = 4
+        list.append(child1)
+        list.append(child2)
+    return list
+
+
+def minimax(tree, depth, root):
+    maxHeuristic = 0
+    dir = ""
+    for i in root.children:
+        heurI = findHeuristic(tree, depth, i)
+        if  heurI > maxHeuristic:
+            maxHeuristic = heurI
+            dir = i.cameFrom
+    return dir
+
+def findHeuristic(tree, depth, root):
+    if depth == 0:
+        return heuristic(root.board)
+    elif depth%2 == 1:
+        heur = 0
+        for i in root.children:
+            it = 0
+            if it%2 == 0:
+                prob = 0.9
+            else:
+                prob = 0.1
+            it += 1
+            heur += findHeuristic(tree, depth-1, i)*prob
+        return heur
+    else:
+        for i in root.children:
+            return findHeuristic(tree, depth-1, i)
+
+
+def heuristic(board):
+    empty = 0
+    for i in range(len(board)):
+        if board[i] == 0:
+            empty += 1
+    return 16-empty
+
+def solver(board):
+    currentBoard = board
+
+    depth = 2
+
+    tree = Tree()
+    tree.addNode(Node(currentBoard, None, None), None)
+    createTree(tree, depth, currentBoard)
+    tree.depth = depth
+    while True:
+        if not legalMoves(currentBoard):
+            break
+        move(currentBoard, minimax(tree, depth, currentBoard))
+
+        if currentBoard.cameFrom == "a":
+            currentChild = currentBoard.children[0]
+        elif currentBoard.cameFrom == "d":
+            currentChild = currentBoard.children[1]
+        elif currentBoard.cameFrom == "w":
+            currentChild = currentBoard.children[2]
+        else:
+            currentChild = currentBoard.children[3]
+
+        childIndex, value = currentChild.spawn()
+        print("1")
+        root = currentChild.children[(childIndex * 2) + (value / 2) - 1]
+        tree.depth -= 2
+        extraDepth = 2
+        print("2")
+        #addToTree(tree, tree.depth, root, extraDepth)
+        tree.reset()
+        tree.addNode(root, None)
+        print("Start")
+        createTree(tree, depth, root)
+        print("End")
+        tree.depth += extraDepth
+        print("3")
+        currentBoard = deepcopy(root)
+        currentBoard.printBoard()
+        print("")
+        time.sleep(1)
+
+    #win.getMouse()
+    #win.close()
 #
 #
 # """def dummySolve():
@@ -367,4 +321,4 @@ def legalMoves(board):
 #          2,0,2,0,
 #          2,0,4,2,]
 
-game(board)
+solver(board)
