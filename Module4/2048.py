@@ -44,99 +44,108 @@ def spawn(board):
 
 
 def move(board, direction):
-    oldBoard = list(board)
     modified = False
     if direction == 'a':
-        board = moveLeft(board)
+        board,  modified = moveLeft(board)
     elif direction == "d":
-        board = moveRight(board)
+        board,  modified = moveRight(board)
     elif direction == "w":
-        board = moveUp(board)
+        board,  modified = moveUp(board)
     elif direction == "s":
-        board = moveDown(board)
-    if oldBoard != board:
-        modified = True
+        board,  modified = moveDown(board)
     return board, modified
 
 
 def moveLeft(board):
+    modified = False
     for i in range(boardSize):
         tempValue = 0
         index = 0
         for j in range(boardSize):
             if tempValue != 0:
                 if tempValue == board[boardSize*i+j]:
+                    modified = True
                     board[tempNodeIndex] *= 2
                     board[boardSize*i+j] = 0
                     tempValue = 0
             if board[boardSize*i+j] != 0:
                 tempValue = board[boardSize*i+j]
                 if j != index:
+                    modified = True
                     board[boardSize*i+index] = board[boardSize*i+j]
                     board[boardSize*i+j] = 0
                 tempNodeIndex = boardSize*i+index
                 index += 1
-    return board
+    return board, modified
 
 
 def moveRight(board):
+    modified = False
     for i in range(boardSize):
         tempValue = 0
         index = boardSize - 1
         for j in range(boardSize - 1, -1, -1):
             if tempValue != 0:
                 if tempValue == board[boardSize*i+j]:
+                    modified = True
                     board[tempNodeIndex] *= 2
                     board[boardSize*i+j] = 0
                     tempValue = 0
             if board[boardSize*i+j] != 0:
                 tempValue = board[boardSize*i+j]
                 if j != index:
+                    modified = True
                     board[boardSize*i+index] = board[boardSize*i+j]
                     board[boardSize*i+j] = 0
                 tempNodeIndex = boardSize*i+index
                 index -= 1
-    return board
+    return board, modified
 
 
 def moveUp(board):
+    modified = False
     for i in range(boardSize):
         tempValue = 0
         index = 0
         for j in range(boardSize):
             if tempValue != 0:
                 if tempValue == board[boardSize*j+i]:
+                    modified = True
                     board[tempNodeIndex] *= 2
                     board[boardSize*j+i] = 0
                     tempValue = 0
             if board[boardSize*j+i] != 0:
                 tempValue = board[boardSize*j+i]
                 if j != index:
+                    modified = True
                     board[boardSize*index+i] = board[boardSize*j+i]
                     board[boardSize*j+i] = 0
                 tempNodeIndex = boardSize*index+i
                 index += 1
-    return board
+    return board, modified
 
 
 def moveDown(board):
+    modified = False
     for i in range(boardSize):
         tempValue = 0
         index = boardSize - 1
         for j in range(boardSize - 1, -1, -1):
             if tempValue != 0:
                 if tempValue == board[boardSize*j+i]:
+                    modified = True
                     board[tempNodeIndex] *= 2
                     board[boardSize*j+i] = 0
                     tempValue = 0
             if board[boardSize*j+i] != 0:
                 tempValue = board[boardSize*j+i]
                 if j != index:
+                    modified = True
                     board[boardSize*index+i] = board[boardSize*j+i]
                     board[boardSize*j+i] = 0
                 tempNodeIndex = boardSize*index+i
                 index -= 1
-    return board
+    return board, modified
 
 
 def game(board):
@@ -198,7 +207,7 @@ def minimax(depth, root):
 
 def findHeuristic(depth, root, heur):
     if depth == 0:
-        return heur + heuristic3(root.board)
+        return heur + heuristic5(root.board)
     elif depth % 2 == 1:
         it = 0
         for i in root.children:
@@ -252,6 +261,43 @@ def heuristic3(board):
     return heur
 
 
+def heuristic4(board):
+    heur = 20*board[12]+15*board[13]+8*board[8]+12*board[9]+7*board[4]+10*board[14]
+    for i in range(len(board)):
+        if board[i] == 0:
+            heur += 5
+    return heur
+
+
+def heuristic5(board):
+    heur = 0
+    for i in range(len(board)):
+        if i in [0, 1, 2, 3, 12, 13, 14, 15]:
+            heur += board[i]
+        if i in [0, 4, 8, 12, 3, 7, 11, 15]:
+            heur += board[i]
+        if i in [0, 12, 3, 15]:
+            heur += board[i]
+    for j in range(len(board)):
+        if board[i] == 0:
+            heur += 100
+    return heur
+
+
+def heuristic6(board):
+    heur = 0
+    for i in range(len(board)):
+        if i in [0, 1, 2, 3, 12, 13, 14, 15]:
+            heur += board[i]*board[i]
+        if i in [0, 4, 8, 12, 3, 7, 11, 15]:
+            heur += board[i]*board[i]
+        if i in [0, 12, 3, 15]:
+            heur += board[i]*board[i]
+    for j in range(len(board)):
+        if board[i] == 0:
+            heur += 1000
+    return heur
+
 def addRelations(depth, root):
     if depth == 0:
         return
@@ -280,9 +326,8 @@ def removeRelations(root):
     root = None
 
 
-def solver(board):
+def solver(board, gui):
     board, random, value = spawn(board)
-    gui = getNewBoardWindow(4, None)
     depth = 4
 
     node = Node(board, None)
@@ -295,15 +340,16 @@ def solver(board):
             if tile == 0:
                 empty += 1
         if empty == 0:
-            print("full board")
-            printBoard(board)
             if not legalMoves(board):
-                print("Trying to break")
                 break
-        elif empty < 2:
+        elif empty < 1 and max(board) > 1024:
+            depth = 10
+        elif empty < 3 and max(board) > 256:
             depth = 8
-        elif empty < 5 and max(board) > 64:
+        elif empty < 6 and max(board) > 128:
             depth = 6
+        # elif max(board) > 128:
+        #     depth = 4
         else:
             depth = 4
 
@@ -318,6 +364,7 @@ def solver(board):
         gui.drawBoard(node.board)
         #time.sleep(0.1)
     print("Escaped the while loop!")
+    return node.board
     #win.getMouse()
     #win.close()
 #
@@ -360,15 +407,14 @@ def solver(board):
 #          2,0,2,0,
 #          2,0,4,2,]
 
-
-solver(board)
-
-def test(depth, res):
-    if depth == 0:
-        return 5
-    if depth % 2 == 1:
-        res += test(depth-1, res)
-        return res
-    else:
-        res += test(depth-1, res)
-        return res
+gui = getNewBoardWindow(4, None)
+for i in range(10):
+    board = [0, 0, 0, 0,
+         0, 0, 0, 0,
+         0, 0, 0, 0,
+         0, 0, 0, 0]
+    start = time.time()
+    board = solver(board, gui)
+    t = time.time()-start
+    print(str(int(t)/60) + " min and " + str(int(t)%60) + " sec")
+    print board
