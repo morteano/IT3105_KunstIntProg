@@ -245,7 +245,7 @@ def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
     if depth == 0:
         return heur + heuristicMagne(root.board)
     elif depth % 2 == 1:
-        v = inf
+        v = 100000000
         for i in root.children:
             v = min(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, 0, alpha, beta))
             beta = min(beta, v)
@@ -253,7 +253,7 @@ def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
                 break
         return v
     else:
-        v = -inf
+        v = 0
         for i in root.children:
             v = max(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, 0, alpha, beta))
             alpha = max(alpha, v)
@@ -431,9 +431,6 @@ def heuristicMagne(board):
         heur += board[2]*3
         heur += board[3]*2
 
-        if max(board) == board[14]:
-            if board[15] > board[11]:
-                heur += board[11]*50
     elif max(board) == board[0]:
         heur += board[0]*200
         heur += board[1]*100
@@ -486,9 +483,7 @@ def heuristicMagne(board):
         heur += board[2]*4
         heur += board[1]*3
         heur += board[0]*2
-        if max(board) == board[13]:
-            if board[12] > board[8]:
-                heur += board[8]*50
+
 
     heur += 10*board.count(0)
     return heur
@@ -542,36 +537,45 @@ def solver(board, gui):
         if empty == 0:
             if not legalMoves(board):
                 break
-        elif empty < 1 and max(board) > 1024:
-            depth = 10
-        elif empty < 3 and max(board) > 256:
-            depth = 8
-        elif empty < 6 and max(board) > 128:
-            depth = 6
-        elif empty < 2:
-            depth = 8
+        # elif empty < 1 and max(board) > 1024:
+        #     depth = 10
+        # elif empty < 3 and max(board) > 256:
+        #     depth = 8
+        # elif empty < 6 and max(board) > 128:
+        #     depth = 6
+        # # elif empty < 2:
+        # #      depth = 8
         else:
-            depth = 6
+            depth = 4
         oldNode = node
+        gui.drawBoard(node.board)
         dir, index = minimax(depth, node)
         board, modified = move(board, dir)
         board, childIndex, value, boardIndex = spawn(board)
         node = oldNode.children[index].children[childIndex]
         node.board[boardIndex] = value
+
+        # maxTile = max(board)
+        # if not (maxTile == board[0] or maxTile == board[3] or maxTile == board[12] or maxTile == board[15]):
+        #     if maxTile == node.parent.parent.board[0] or maxTile == node.parent.parent.board[3] or maxTile == node.parent.parent.board[12] or maxTile == node.parent.parent.board[15]:
+        #         print(dir)
+        #         printBoard(node.parent.parent.board)
         node.parent = None
         removeRelations(oldNode)
         #reuseRelations(oldDepth-2, 2+depth-oldDepth, node)
         addRelations(depth, node)
         #oldDepth = depth
-        gui.drawBoard(node.board)
         #time.sleep(0.1)
+    gui.drawBoard(node.board)
     return node.board
     #win.getMouse()
     #win.close()
 
 gui = getNewBoardWindow(4, None)
-maxTiles = {32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0}
-for i in range(100):
+maxTiles = {32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0, 8192:0}
+totalTime = 0
+iterations = 100
+for i in range(iterations):
     board = [0, 0, 0, 0,
          0, 0, 0, 0,
          0, 0, 0, 0,
@@ -582,8 +586,31 @@ for i in range(100):
     print(str(int(t)/60) + " min and " + str(int(t)%60) + " sec")
     print board
     maxTiles[max(board)] += 1
-    if i % 10 == 0:
-        print("Magne")
+    if (i+1) % 10 == 0:
         print(maxTiles)
+        print(maxTiles[2048], maxTiles[4096], sum(maxTiles.values()))
+        print("Success rate: " + str((float(maxTiles[2048]+maxTiles[4096]))/sum(maxTiles.values())))
+    totalTime += t
     time.sleep(3)
+print("Depth = 2")
 print(maxTiles)
+print("Success rate: " + str(float(maxTiles[2048]+maxTiles[4096])/sum(maxTiles.values())))
+success = 0
+for total in maxTiles.keys():
+    if total == 8192:
+        success += maxTiles[total]
+        print("8192: " + str(int(float(success)/sum(maxTiles.values())*100)) + "%")
+    elif total == 4096:
+        success += maxTiles[total]
+        print("4096: " + str(float(success)/sum(maxTiles.values())*100) + "%")
+    elif total == 2048:
+        success += maxTiles[total]
+        print("2048: " + str(float(success)/sum(maxTiles.values())*100) + "%")
+    elif total == 1024:
+        success += maxTiles[total]
+        print("1024: " + str(int(float(success)/sum(maxTiles.values())*100)) + "%")
+    elif total == 512:
+        success += maxTiles[total]
+        print("512: " + str(float(success)/sum(maxTiles.values())*100) + "%")
+avgT = totalTime/iterations
+print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
