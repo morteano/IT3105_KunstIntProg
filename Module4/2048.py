@@ -411,9 +411,4 @@ def testRuns(iterations):
     print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
 
 
-board = [0, 0, 0, 0,
-     0, 0, 0, 0,
-     0, 0, 0, 0,
-     0, 0, 0, 0]
-board, dummy, dummy, dummy = spawn(board)
-game(board)
+testRuns(1)
