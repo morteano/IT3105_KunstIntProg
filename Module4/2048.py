@@ -1,10 +1,5 @@
 from random import randint, random, choice
-from graphics import *
-import heapq
 import time
-from copy import deepcopy
-from visuals import GameWindow
-from Tree import *
 from GUI import *
 
 class Node:
@@ -15,13 +10,10 @@ class Node:
 
 
 boardSize = 4
-board = [0, 0, 0, 0,
-         0, 0, 0, 0,
-         0, 0, 0, 0,
-         0, 0, 0, 0]
 inf = float("inf")
 
 
+# Prints board as text
 def printBoard(board):
     for i in xrange(boardSize):
         row = []
@@ -29,6 +21,7 @@ def printBoard(board):
             row.append(board[boardSize*i+j])
         print(row)
     print(" ")
+
 
 # Spawns a tile with 0.9 prob of being 2, 0.1 prob of being 4 in an empty tile
 def spawn(board):
@@ -44,6 +37,7 @@ def spawn(board):
     return board, random, board[emptyNodes[random]], emptyNodes[random]
 
 
+# Moves all tiles to the input direction
 def move(board, direction):
     modified = False
     if direction == 'a':
@@ -149,20 +143,19 @@ def moveDown(board):
     return board, modified
 
 
+# Playable game with WASD-buttons as input
 def game(board):
-        # window = GameWindow( )
-        board = spawn(board)
-        gui = getNewBoardWindow(4, None)
-        while True:
-            direction = raw_input("Press direction (WASD): ")
-            board = move(board, direction)
-            board = spawn(board)
-            time.sleep(0.5)
-            # window.update_view(board)
-
+    board, dummy, dummy, dummy = spawn(board)
+    gui = getNewBoardWindow(4, None)
+    while True:
+        direction = raw_input("Press direction (WASD): ")
+        board, modified = move(board, direction)
+        if modified:
+            board, dummy, dummy, dummy = spawn(board)
             gui.drawBoard(board)
 
 
+# Checks if there is possible to perform a legal move
 def legalMoves(board):
     movable = False
     for i in xrange(boardSize-1):
@@ -176,6 +169,7 @@ def legalMoves(board):
     return movable
 
 
+# Creates all possible board depending on where the new tile appears
 def createAllPossibleBoards(node):
     emptyNodes = []
     for i in range(len(node.board)):
@@ -185,13 +179,11 @@ def createAllPossibleBoards(node):
     for i in emptyNodes:
         child1 = Node(list(node.board), node.lastMove)
         child1.board[i] = 2
-        # child2 = Node(list(node.board), node.lastMove)
-        # child2.board[i] = 4
         nodeList.append(child1)
-        # nodeList.append(child2)
     return nodeList
 
 
+# Uses minimax to get most promising direction to move
 def minimax(depth, root):
     maxHeuristic = -1
     dir = ""
@@ -204,13 +196,13 @@ def minimax(depth, root):
             dir = i.lastMove
             bestIndex = index
         index += 1
-    # if heurI < 1:
-    #     print("Heuristic: ", heurI)
     return dir, bestIndex
 
+
+# Unused function to find expectimax heuristics
 def findHeuristic(depth, root, heur):
     if depth == 0:
-        return heur + heuristicMiniMe(root.board)
+        return heur + heuristicBoard(root.board)
     elif depth % 2 == 1:
         for i in root.children:
             heur += (findHeuristic(depth-1, i, 0))/len(root.children)
@@ -221,33 +213,15 @@ def findHeuristic(depth, root, heur):
         return heur
 
 
-def findHeuristicMiniMax(depth, root, heur):
-    heurMax = 0
-    heurMin = 100000000
-    if depth == 0:
-        return heur + heuristicMagne(root.board)
-    elif depth % 2 == 1:
-        for i in root.children:
-            tempHeur = findHeuristicMiniMax(depth-1, i, 0)
-            if tempHeur < heurMin:
-                heurMin = tempHeur
-        return heurMin
-    else:
-        # if len(root.children) == 0:
-            # print("Len: ", len(root.children))
-        for i in root.children:
-            tempHeur = findHeuristicMiniMax(depth-1, i, 0)
-            if tempHeur > heurMax:
-                heurMax = tempHeur
-        return heurMax
-
+# Search through the tree with alphabeta pruning. But gives the leaf nodes the heuristic of all nodes in the path.
 def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
+    heur += heuristicBoard(root.board)
     if depth == 0:
-        return heur + heuristicMagne(root.board)
+        return heur
     elif depth % 2 == 1:
-        v = 100000000
+        v = inf
         for i in root.children:
-            v = min(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, 0, alpha, beta))
+            v = min(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, heur, alpha, beta))
             beta = min(beta, v)
             if beta <= alpha:
                 break
@@ -255,239 +229,95 @@ def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
     else:
         v = 0
         for i in root.children:
-            v = max(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, 0, alpha, beta))
+            v = max(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, heur, alpha, beta))
             alpha = max(alpha, v)
             if beta <= alpha:
                 break
         return v
 
 
-def heuristic5(board):
-    # {64: 0, 128: 0, 4096: 0, 1024: 17, 256: 2, 512: 11, 2048: 1}
-    heur = 0
-    for i in range(len(board)):
-        if i in [0, 1, 2, 3, 12, 13, 14, 15]:
-            heur += board[i]
-        if i in [0, 4, 8, 12, 3, 7, 11, 15]:
-            heur += board[i]
-        if i in [0, 12, 3, 15]:
-            heur += board[i]
-        heur += 100*board.count(0)
-    return heur
-
-
-def heuristicDownLeft(board):
-    maxTile = max(board)
-    heur = 0
-    if maxTile == board[12]:
-        heur += board[12]*10000
-        heur += board[13]*20
-        heur += board[14]*10
-        heur += board[15]*4
-        heur += board[8]*3
-        heur += board[9]*2
-        for i in [0,1,2,3,4,5,6,7,10,11]:
-            heur -= board[i]*(i%boardSize)*((boardSize-1)-(i/boardSize))
-    elif maxTile == board[0]:
-        heur += board[0]*10000
-        heur += board[1]*20
-        heur += board[2]*10
-        heur += board[3]*4
-        heur += board[4]*3
-        heur += board[5]*2
-        for i in [6,7,8,9,10,11,12,13,14,15]:
-            heur -= board[i]*(i%boardSize)*(i/boardSize)
-    elif maxTile == board[3]:
-        heur += board[3]*10000
-        heur += board[2]*20
-        heur += board[1]*10
-        heur += board[0]*4
-        heur += board[7]*3
-        heur += board[6]*2
-        for i in [4,5,8,9,10,11,12,13,14,15]:
-            heur -= board[i]*((boardSize-1)-i%boardSize)*(i/boardSize)
-    elif maxTile == board[15]:
-        heur += board[15]*10000
-        heur += board[14]*20
-        heur += board[13]*10
-        heur += board[12]*4
-        heur += board[11]*3
-        heur += board[10]*2
-        for i in [0,1,2,3,4,5,6,7,8,9]:
-            heur -= board[i]*((boardSize-1)-i%boardSize)*((boardSize-1)-i/boardSize)
-    else:
-        heur = heuristic5(board)/10
-        return heur
-    if maxTile == 2048:
-        heur += 2048*2048
-    heur += 50*board.count(0)
-    return heur
-
-
-def heuristicMiniMe(board):
-    #depth = 3: {32: 0, 64: 0, 4096: 2, 512: 13, 128: 1, 2048: 44, 256: 0, 1024: 40}
-    heur = 0
-    heur += board[12]*100
-    heur += board[13]*50
-    heur += board[14]*20
-    heur += board[15]*6
-    for i in range(boardSize*2):
-        heur -= board[i]
-
-    heur += 10*board.count(0)
-    return heur
-
-
-def heuristicMiniMe2(board):
-    heur = 0
-    heur += board[12]*100
-    heur += board[13]*50
-    heur += board[14]*20
-    heur += board[15]*6
-    heur += board[11]*4
-    if max(board) == board[13]:
-        if board[12] > board[8]:
-            heur += board[8]*50
-
-    for i in range(boardSize*2):
-        heur -= board[i]
-
-    heur += 10*board.count(0)
-    return heur
-
-def heuristicMiniMeExtended(board):
-    # {32: 0, 64: 0, 4096: 10, 512: 12, 128: 0, 2048: 41, 256: 0, 1024: 37}
-    heur = 0
-    heur += board[12]*100
-    heur += board[13]*50
-    heur += board[14]*20
-    heur += board[15]*10
-    heur += board[11]*6
-    heur += board[10]*5
-    heur += board[9]*4
-    heur += board[8]*3
-    if max(board) == board[13]:
-        if board[12] > board[8]:
-            heur += board[8]*50
-
-    for i in range(boardSize*2):
-        heur -= board[i]
-
-    heur += 10*board.count(0)
-    return heur
-
-
-def heuristicMiniMeDoubled(board):
+# Returns a heuristic for the board based on a zigzag pattern from the corners
+def heuristicBoard(board):
+    heuristicList = [200, 100, 50, 25, 20, 18, 16, 12, 10, 8, 7, 6, 5, 4, 3, 2]
     heur = 0
     if max(board) == board[15]:
-        heur += board[15]*100
-        heur += board[14]*50
-        heur += board[13]*20
-        heur += board[12]*10
-        heur += board[8]*6
-        heur += board[9]*5
-        heur += board[10]*4
-        heur += board[11]*3
-        if max(board) == board[14]:
-            if board[15] > board[11]:
-                heur += board[11]*50
-    else:
-        heur += board[12]*100
-        heur += board[13]*50
-        heur += board[14]*20
-        heur += board[15]*10
-        heur += board[11]*6
-        heur += board[10]*5
-        heur += board[9]*4
-        heur += board[8]*3
-        if max(board) == board[13]:
-            if board[12] > board[8]:
-                heur += board[8]*50
-
-
-    for i in range(boardSize*2):
-        heur -= board[i]
-    heur += 10*board.count(0)
-    return heur
-
-def heuristicMagne(board):
-    # {32: 0, 64: 0, 4096: 17, 512: 5, 128: 1, 2048: 54, 256: 0, 1024: 23}
-    heur = 0
-    if max(board) == board[15]:
-        heur += board[15]*200
-        heur += board[14]*100
-        heur += board[13]*50
-        heur += board[12]*25
-        heur += board[8]*20
-        heur += board[9]*18
-        heur += board[10]*16
-        heur += board[11]*12
-        heur += board[7]*10
-        heur += board[6]*8
-        heur += board[5]*7
-        heur += board[4]*6
-        heur += board[0]*5
-        heur += board[1]*4
-        heur += board[2]*3
-        heur += board[3]*2
+        heur += board[15]*heuristicList[0]
+        heur += board[14]*heuristicList[1]
+        heur += board[13]*heuristicList[2]
+        heur += board[12]*heuristicList[3]
+        heur += board[8]*heuristicList[4]
+        heur += board[9]*heuristicList[5]
+        heur += board[10]*heuristicList[6]
+        heur += board[11]*heuristicList[7]
+        heur += board[7]*heuristicList[8]
+        heur += board[6]*heuristicList[9]
+        heur += board[5]*heuristicList[10]
+        heur += board[4]*heuristicList[11]
+        heur += board[0]*heuristicList[12]
+        heur += board[1]*heuristicList[13]
+        heur += board[2]*heuristicList[14]
+        heur += board[3]*heuristicList[15]
 
     elif max(board) == board[0]:
-        heur += board[0]*200
-        heur += board[1]*100
-        heur += board[2]*50
-        heur += board[3]*25
-        heur += board[7]*20
-        heur += board[6]*18
-        heur += board[5]*16
-        heur += board[4]*12
-        heur += board[8]*10
-        heur += board[9]*8
-        heur += board[10]*7
-        heur += board[11]*6
-        heur += board[15]*5
-        heur += board[14]*4
-        heur += board[13]*3
-        heur += board[12]*2
+        heur += board[0]*heuristicList[0]
+        heur += board[1]*heuristicList[1]
+        heur += board[2]*heuristicList[2]
+        heur += board[3]*heuristicList[3]
+        heur += board[7]*heuristicList[4]
+        heur += board[6]*heuristicList[5]
+        heur += board[5]*heuristicList[6]
+        heur += board[4]*heuristicList[7]
+        heur += board[8]*heuristicList[8]
+        heur += board[9]*heuristicList[9]
+        heur += board[10]*heuristicList[10]
+        heur += board[11]*heuristicList[11]
+        heur += board[15]*heuristicList[12]
+        heur += board[14]*heuristicList[13]
+        heur += board[13]*heuristicList[14]
+        heur += board[12]*heuristicList[15]
+
     elif max(board) == board[3]:
-        heur += board[3]*200
-        heur += board[2]*100
-        heur += board[1]*50
-        heur += board[0]*25
-        heur += board[4]*20
-        heur += board[5]*18
-        heur += board[6]*16
-        heur += board[7]*12
-        heur += board[11]*10
-        heur += board[10]*8
-        heur += board[9]*7
-        heur += board[8]*6
-        heur += board[12]*5
-        heur += board[13]*4
-        heur += board[14]*3
-        heur += board[15]*2
+        heur += board[3]*heuristicList[0]
+        heur += board[2]*heuristicList[1]
+        heur += board[1]*heuristicList[2]
+        heur += board[0]*heuristicList[3]
+        heur += board[4]*heuristicList[4]
+        heur += board[5]*heuristicList[5]
+        heur += board[6]*heuristicList[6]
+        heur += board[7]*heuristicList[7]
+        heur += board[11]*heuristicList[8]
+        heur += board[10]*heuristicList[9]
+        heur += board[9]*heuristicList[10]
+        heur += board[8]*heuristicList[11]
+        heur += board[12]*heuristicList[12]
+        heur += board[13]*heuristicList[13]
+        heur += board[14]*heuristicList[14]
+        heur += board[15]*heuristicList[15]
 
     elif max(board) == board[12]:
-        heur += board[12]*200
-        heur += board[13]*100
-        heur += board[14]*50
-        heur += board[15]*25
-        heur += board[11]*20
-        heur += board[10]*18
-        heur += board[9]*16
-        heur += board[8]*12
-        heur += board[4]*10
-        heur += board[5]*8
-        heur += board[6]*7
-        heur += board[7]*6
-        heur += board[3]*5
-        heur += board[2]*4
-        heur += board[1]*3
-        heur += board[0]*2
+        heur += board[12]*heuristicList[0]
+        heur += board[13]*heuristicList[1]
+        heur += board[14]*heuristicList[2]
+        heur += board[15]*heuristicList[3]
+        heur += board[11]*heuristicList[4]
+        heur += board[10]*heuristicList[5]
+        heur += board[9]*heuristicList[6]
+        heur += board[8]*heuristicList[7]
+        heur += board[4]*heuristicList[8]
+        heur += board[5]*heuristicList[9]
+        heur += board[6]*heuristicList[10]
+        heur += board[7]*heuristicList[11]
+        heur += board[3]*heuristicList[12]
+        heur += board[2]*heuristicList[13]
+        heur += board[1]*heuristicList[14]
+        heur += board[0]*heuristicList[15]
 
-
+    # Add a small value for merging tiles
     heur += 10*board.count(0)
     return heur
 
+
+# Add parent-child relations to the nodes in the tree
 def addRelations(depth, root):
     if depth == 0:
         return
@@ -508,6 +338,7 @@ def addRelations(depth, root):
             addRelations(depth - 2, j)
 
 
+# Remove parent-child relations to free up memory space
 def removeRelations(root):
     for i in root.children:
         for j in i.children:
@@ -516,6 +347,7 @@ def removeRelations(root):
     root = None
 
 
+# So far unused function for reusing a subtree to make the algorithm faster
 def reuseRelations(depth, extraDepth, root):
     if depth == 0:
         addRelations(extraDepth, root)
@@ -525,10 +357,10 @@ def reuseRelations(depth, extraDepth, root):
                 reuseRelations(depth-2, extraDepth, grandchild)
 
 
+# Tries to solve the game
 def solver(board, gui):
     board, random, value, boardIndex = spawn(board)
-    depth = 4
-    #oldDepth = 4
+    depth = 6
     node = Node(board, None)
     addRelations(depth, node)
 
@@ -537,16 +369,6 @@ def solver(board, gui):
         if empty == 0:
             if not legalMoves(board):
                 break
-        # elif empty < 1 and max(board) > 1024:
-        #     depth = 10
-        # elif empty < 3 and max(board) > 256:
-        #     depth = 8
-        # elif empty < 6 and max(board) > 128:
-        #     depth = 6
-        # # elif empty < 2:
-        # #      depth = 8
-        else:
-            depth = 4
         oldNode = node
         gui.drawBoard(node.board)
         dir, index = minimax(depth, node)
@@ -554,63 +376,44 @@ def solver(board, gui):
         board, childIndex, value, boardIndex = spawn(board)
         node = oldNode.children[index].children[childIndex]
         node.board[boardIndex] = value
-
-        # maxTile = max(board)
-        # if not (maxTile == board[0] or maxTile == board[3] or maxTile == board[12] or maxTile == board[15]):
-        #     if maxTile == node.parent.parent.board[0] or maxTile == node.parent.parent.board[3] or maxTile == node.parent.parent.board[12] or maxTile == node.parent.parent.board[15]:
-        #         print(dir)
-        #         printBoard(node.parent.parent.board)
         node.parent = None
         removeRelations(oldNode)
-        #reuseRelations(oldDepth-2, 2+depth-oldDepth, node)
         addRelations(depth, node)
-        #oldDepth = depth
-        #time.sleep(0.1)
     gui.drawBoard(node.board)
     return node.board
-    #win.getMouse()
-    #win.close()
 
-gui = getNewBoardWindow(4, None)
-maxTiles = {32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0, 8192:0}
-totalTime = 0
-iterations = 100
-for i in range(iterations):
-    board = [0, 0, 0, 0,
-         0, 0, 0, 0,
-         0, 0, 0, 0,
-         0, 0, 0, 0]
-    start = time.time()
-    board = solver(board, gui)
-    t = time.time()-start
-    print(str(int(t)/60) + " min and " + str(int(t)%60) + " sec")
-    print board
-    maxTiles[max(board)] += 1
-    if (i+1) % 10 == 0:
-        print(maxTiles)
-        print(maxTiles[2048], maxTiles[4096], sum(maxTiles.values()))
-        print("Success rate: " + str((float(maxTiles[2048]+maxTiles[4096]))/sum(maxTiles.values())))
-    totalTime += t
-    time.sleep(3)
-print("Depth = 2")
-print(maxTiles)
-print("Success rate: " + str(float(maxTiles[2048]+maxTiles[4096])/sum(maxTiles.values())))
-success = 0
-for total in maxTiles.keys():
-    if total == 8192:
-        success += maxTiles[total]
-        print("8192: " + str(int(float(success)/sum(maxTiles.values())*100)) + "%")
-    elif total == 4096:
-        success += maxTiles[total]
-        print("4096: " + str(float(success)/sum(maxTiles.values())*100) + "%")
-    elif total == 2048:
-        success += maxTiles[total]
-        print("2048: " + str(float(success)/sum(maxTiles.values())*100) + "%")
-    elif total == 1024:
-        success += maxTiles[total]
-        print("1024: " + str(int(float(success)/sum(maxTiles.values())*100)) + "%")
-    elif total == 512:
-        success += maxTiles[total]
-        print("512: " + str(float(success)/sum(maxTiles.values())*100) + "%")
-avgT = totalTime/iterations
-print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
+
+# Runs the solver iteration number of times and prints the output
+def testRuns(iterations):
+    gui = getNewBoardWindow(4, None)
+    maxTiles = {32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0, 8192:0}
+    totalTime = 0
+    for i in range(iterations):
+        board = [0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0]
+        start = time.time()
+        board = solver(board, gui)
+        t = time.time()-start
+        print(str(int(t)/60) + " min and " + str(int(t)%60) + " sec")
+        print board
+        maxTiles[max(board)] += 1
+        if (i+1) % 10 == 0:
+            print(maxTiles)
+            print(maxTiles[2048], maxTiles[4096], sum(maxTiles.values()))
+            print("Success rate: " + str((float(maxTiles[2048]+maxTiles[4096]))/sum(maxTiles.values())))
+        totalTime += t
+        time.sleep(3)
+    print(maxTiles)
+    print("Success rate: " + str(float(maxTiles[2048]+maxTiles[4096]+maxTiles[8192])/sum(maxTiles.values())))
+    avgT = totalTime/iterations
+    print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
+
+
+board = [0, 0, 0, 0,
+     0, 0, 0, 0,
+     0, 0, 0, 0,
+     0, 0, 0, 0]
+board, dummy, dummy, dummy = spawn(board)
+game(board)
