@@ -1,3 +1,8 @@
+import theano
+import theano.tensor as T
+
+import numpy
+
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
 

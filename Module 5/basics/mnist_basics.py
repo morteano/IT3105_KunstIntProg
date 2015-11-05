@@ -9,6 +9,7 @@ from array import array as pyarray
 import matplotlib.pyplot as pyplot
 import numpy
 import pickle
+import time
 
 # The reduce function was removed in Python 3.0, so just use this handmade version.
 def kd_reduce(func,seq):
@@ -84,6 +85,7 @@ def show_digit_image(image,cm='gray'):
     pyplot.ion()
     pyplot.figure()
     pyplot.imshow(image, cmap=pyplot.get_cmap(cm))
+    time.sleep(2)
 
 # *** Image Conversion ****
 # Conversions from arrays to (flat) lists, and the opposite conversion, called 'reconstruction'.
