@@ -28,6 +28,7 @@ def filterAll(images):
 images = filterAll(images);
 print(images.dtype)
 print(images[0])
+print(flatten_image(images[0]))
 
 
 # generate symbolic variables for input (x and y represent a
@@ -37,5 +38,9 @@ y = T.ivector('y')  # labels, presented as 1D vector of [int] labels
 
 # construct the logistic regression class
 # Each MNIST image has size 28*28
-classifier = LogisticRegression(images, n_in=28 * 28, n_out=10)
+classifier = LogisticRegression(images[0], n_in=28 * 28, n_out=10)
+
+cost = classifier.negative_log_likelihood(y)
+
+print(cost)
 
