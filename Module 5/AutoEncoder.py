@@ -1,6 +1,7 @@
 import theano
 import theano.tensor as T
 import theano.tensor.nnet as Tann
+import matplotlib.pyplot as plt
 
 import numpy as np
 
@@ -11,17 +12,17 @@ def genallbitcases(numbits):
     return [ bits(i) for i in range(2**numbits)]
 
 class autoencoder:
-    def init(self, nb=3, nh=2, lr=.1):
+    def __init__(self, nb=10, nh=2, nob=10, lr=.1):
         self.cases = genallbitcases(nb)
         self.lrate = lr
-        self.buildann(nb, nh, lr)
+        self.buildann(nb, nh, nob, lr)
 
-    def buildann(self, nb, nh, lr):
+    def buildann(self, nb , nh, nob, lr):
         w1 = theano.shared(np.random.uniform(-.1, .1, size = (nb, nh)))
-        w2 = theano.shared(np.random.uniform(-.1, .1, size = (nh, nb)))
+        w2 = theano.shared(np.random.uniform(-.1, .1, size = (nh, nob)))
         input = T.dvector ('input')
         b1 = theano.shared(np.random.uniform(-.1, .1, size = nh))
-        b2 = theano.shared(np.random.uniform(-.1, .1, size = nb))
+        b2 = theano.shared(np.random.uniform(-.1, .1, size = nob))
         x1 = Tann.sigmoid(T.dot(input, w1) + b1)
         x2 = Tann.sigmoid(T.dot(x1, w2) + b2)
         error = T.sum((input - x2)**2)
@@ -37,12 +38,29 @@ class autoencoder:
             error = 0
             for c in self.cases:
                 error += self.trainer(c)
-                errors.append(error)
+            errors.append(error)
         return errors
 
     def dotesting(self):
         hidden_activations = []
         for c in self.cases:
-            hact = self.predictor(c)
+            _, hact = self.predictor(c)
             hidden_activations.append(hact)
         return hidden_activations
+
+auto = autoencoder()
+error = auto.dotraining(100)
+epochs = []
+for i in range(len(error)):
+    epochs.append(i)
+hidden = auto.dotesting()
+
+plt.plot(epochs, error)
+plt.xlabel('epochs')
+plt.ylabel('error')
+plt.title('Result')
+plt.show()
+
+print(hidden)
+plt.plot(*zip(*hidden), marker='o', color='r', ls='')
+plt.show()
