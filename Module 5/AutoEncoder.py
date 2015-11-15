@@ -26,6 +26,14 @@ class autoencoder:
         x1 = Tann.sigmoid(T.dot(input, w1) + b1)
         x2 = Tann.sigmoid(T.dot(x1, w2) + b2)
         error = T.sum((input - x2)**2)
+        maxIndex = 0
+        maxVal = 0
+        for i in range(10):
+            if x2[i] > maxVal:
+                maxVal = x2[i]
+                maxIndex = i
+        print(maxIndex)
+        print(x2[0],x2[1],x2[2],x2[3],x2[4],x2[5],x2[6],x2[7],x2[8],x2[9])
         params = [w1, b1, w2, b2]
         gradients = T.grad(error, params)
         backprop_acts = [(p, p - self.lrate * g) for p,g in zip(params, gradients)]
@@ -49,7 +57,7 @@ class autoencoder:
         return hidden_activations
 
 auto = autoencoder()
-error = auto.dotraining(100)
+error = auto.dotraining(1)
 epochs = []
 for i in range(len(error)):
     epochs.append(i)
