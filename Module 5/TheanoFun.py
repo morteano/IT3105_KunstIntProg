@@ -36,20 +36,36 @@ class ann:
         self.buildann(ni, nh, no, lr)
 
     def buildann(self, nb , nh, nob, lr):
-        w1 = theano.shared(np.random.uniform(-.1, .1, size = (nb, nh)))
-        w2 = theano.shared(np.random.uniform(-.1, .1, size = (nh, nob)))
+        w = []
+        b = []
+        x = []
+        for i in range(len(nh)):
+            if i == 0:
+                w.append(theano.shared(np.random.uniform(-.1, .1, size = (nb, nh[i]))))
+            if i != 0:
+                w.append(theano.shared(np.random.uniform(-.1, .1, size = (nh[i - 1], nh[i]))))
+            if i == len(nh) - 1:
+                w.append(theano.shared(np.random.uniform(-.1, .1, size = (nh[i], nob))))
         input = T.dvector ('input')
         label = T.dvector ('label')
-        b1 = theano.shared(np.random.uniform(-.1, .1, size = nh))
-        b2 = theano.shared(np.random.uniform(-.1, .1, size = nob))
-        x1 = Tann.sigmoid(T.dot(input, w1) + b1)
-        x2 = Tann.sigmoid(T.dot(x1, w2) + b2)
-        error = T.sum((x2 - label)**2)
-        params = [w1, b1, w2, b2]
+        for i in range(len(nh)):
+            b.append(theano.shared(np.random.uniform(-.1, .1, size = nh[i])))
+            if i == len(nh) - 1:
+                b.append(theano.shared(np.random.uniform(-.1, .1, size = nob)))
+        for i in range(len(nh)):
+            if i == 0:
+                x.append(Tann.sigmoid(T.dot(input, w[i]) + b[i]))
+            x.append(Tann.sigmoid(T.dot(x[i], w[i + 1]) + b[i + 1]))
+        error = T.sum((x[len(nh)] - label)**2)
+        params = []
+        for i in range(len(w)):
+            params.append(w[i])
+            params.append(b[i])
+        #params = [w[0], b[0], w[1], b[1]]
         gradients = T.grad(error, params)
         backprop_acts = [(p, p - self.lrate * g) for p,g in zip(params, gradients)]
-        self.predictor = theano.function([input], x2)
-        self.trainer = theano.function([input, label], [x2, error], updates = backprop_acts)
+        self.predictor = theano.function([input], x[len(nh)])
+        self.trainer = theano.function([input, label], [x[len(nh)], error], updates = backprop_acts)
 
     def dotraining(self, epochs = 100):
         errors = []
@@ -59,12 +75,12 @@ class ann:
             totalError = 0
             j = 0
             for c in self.cases:
-                x2, error = self.trainer(c, createCompVector(labels[j]))
-                maxValue = x2[0]
+                xLast, error = self.trainer(c, createCompVector(labels[j]))
+                maxValue = xLast[0]
                 maxIndex = 0
                 for k in range(10):
-                    if maxValue < x2[k]:
-                        maxValue = x2[k]
+                    if maxValue < xLast[k]:
+                        maxValue = xLast[k]
                         maxIndex = k
                 if maxIndex != labels[j][0]:
                     mistakes += 1
@@ -83,12 +99,12 @@ class ann:
         for c in self.cases:
             mistakes = 0
             j = 0
-            x2 = self.predictor(c)
-            maxValue = x2[0]
+            xLast = self.predictor(c)
+            maxValue = xLast[0]
             maxIndex = 0
             for k in range(10):
-                if maxValue < x2[k]:
-                    maxValue = x2[k]
+                if maxValue < xLast[k]:
+                    maxValue = xLast[k]
                     maxIndex = k
             if maxIndex != labels[j][0]:
                 mistakes += 1
@@ -99,13 +115,12 @@ class ann:
     def blind_test(self, feature_sets):
         finalResult = []
         for c in feature_sets:
-            x2 = self.predictor(c)
-            maxValue = x2[0]
+            xLast = self.predictor(c)
+            maxValue = xLast[0]
             maxIndex = 0
             for k in range(10):
-                print(x2[k])
-                if maxValue < x2[k]:
-                    maxValue = x2[k]
+                if maxValue < xLast[k]:
+                    maxValue = xLast[k]
                     maxIndex = k
             finalResult.append(maxIndex)
         return finalResult
@@ -143,16 +158,23 @@ testImages, testLabels = load_mnist("testing", np.arange(10), helmerPath)
 flatTestImages = getFlatInput(testImages)
 
 flatImages = getFlatInput(images)
-network = ann(flatImages, labels)
+network = ann(flatImages, labels, 28**2, [50, 30], 10, .1)
 error = network.dotraining(100)
 """epochs = []
 for i in range(len(error)):
     epochs.append(i)"""
 result = network.blind_test(flatTestImages)
 
+mistakes = 0
 for i in range(len(result)):
-    print("My answer:", result[i])
-    print("Correct answer:", testLabels[i])
+
+    if result[i] != testLabels[i]:
+        mistakes += 1
+
+print("Test mistakes", mistakes)
+print("Percentage", 1 - (mistakes / len(result)))
+
+
 
 """plt.plot(epochs, error)
 plt.xlabel('epochs')
