@@ -10,9 +10,6 @@ import matplotlib.pyplot as plt
 import time
 import pickle
 
-helmerPath = "/Users/Butikk/.PyCharm40/AI 5/IT3105_KunstIntProg/Module 5/basics/"
-normannPath = "/Users/MortenAlver/PycharmProjects/IT3105_KunstIntProg/Module 5/basics/"
-
 def createCompVector(label):
     vector = []
     for i in range(10):
@@ -173,7 +170,7 @@ def getFlatInput(images):
 
 def runTraining(ni = 28**2, nh = [100], no = 10, lr = .1):
     #load the training dataset
-    images, labels = load_mnist("training", np.arange(10), helmerPath)
+    images, labels = load_mnist("training", np.arange(10))
     flatImages = getFlatInput(images)
 
     #create and train the neural network
@@ -194,7 +191,7 @@ def runTesting(dataset):
     file.close()
 
     #load the testing dataset
-    testImages, testLabels = load_mnist(dataset, np.arange(10), helmerPath)
+    testImages, testLabels = load_mnist(dataset, np.arange(10))
 
     flatTestImages = getFlatInput(testImages)
 
@@ -211,7 +208,7 @@ def runTesting(dataset):
     print("Test mistakes", mistakes)
     print("Percentage", 1 - (mistakes / len(result)))
 
-#error = runTraining(28**2, [100], 10, .1)
+# error = runTraining(28**2, [100], 10, .1)
 runTesting("training")
 runTesting("testing")
 #case = load_cases("demo_prep", helmerPath, True)
