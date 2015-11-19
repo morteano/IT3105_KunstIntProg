@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 from threading import Thread
 
 class GUI(Frame):
@@ -14,9 +14,9 @@ class GUI(Frame):
 
 
     def initUI(self, boardSize, cellSize):
-        for row in xrange(boardSize-1, -1, -1):
+        for row in range(boardSize-1, -1, -1):
             self.cells.append([])
-            for column in xrange(boardSize):
+            for column in range(boardSize):
                 cell = Frame(self, width=cellSize, height=cellSize)
                 cell.grid(row=row, column=column, padx=4, pady=4)
                 cell.pack_propagate(0)
@@ -31,8 +31,8 @@ class GUI(Frame):
 
 
     def drawBoard(self, board):
-        for col in xrange(4):
-            for row in xrange(4):
+        for col in range(4):
+            for row in range(4):
                 self.setTile(board[col+4*row], col, 3-row)
 
 
