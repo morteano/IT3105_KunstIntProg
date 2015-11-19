@@ -1,6 +1,7 @@
 from random import randint, random, choice
 import time
 from GUI import *
+import pickle
 
 class Node:
     def __init__(self, board, lastMove):
@@ -363,7 +364,7 @@ def solver(board, gui):
     depth = 6
     node = Node(board, None)
     addRelations(depth, node)
-
+    storings = []
     while True:
         empty = board.count(0)
         if empty == 0:
@@ -372,6 +373,11 @@ def solver(board, gui):
         oldNode = node
         gui.drawBoard(node.board)
         dir, index = minimax(depth, node)
+        if max(board) < 2048:
+            storing = [board, dir]
+            storings.append(storing)
+        else:
+            break
         board, modified = move(board, dir)
         board, childIndex, value, boardIndex = spawn(board)
         node = oldNode.children[index].children[childIndex]
@@ -380,6 +386,14 @@ def solver(board, gui):
         removeRelations(oldNode)
         addRelations(depth, node)
     gui.drawBoard(node.board)
+    text_file = open("PickleMoves", "rb")
+    storing = pickle.load(text_file)
+    text_file.close()
+    for store in storing:
+        storings.append(store)
+    text_file2 = open("PickleMoves", "wb")
+    pickle.dump(storings, text_file2, protocol=pickle.HIGHEST_PROTOCOL)
+    text_file2.close()
     return node.board
 
 
@@ -404,11 +418,11 @@ def testRuns(iterations):
             print(maxTiles[2048], maxTiles[4096], sum(maxTiles.values()))
             print("Success rate: " + str((float(maxTiles[2048]+maxTiles[4096]))/sum(maxTiles.values())))
         totalTime += t
-        time.sleep(3)
+        # time.sleep(3)
     print(maxTiles)
     print("Success rate: " + str(float(maxTiles[2048]+maxTiles[4096]+maxTiles[8192])/sum(maxTiles.values())))
     avgT = totalTime/iterations
     print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
 
 
-testRuns(1)
+testRuns(150)
