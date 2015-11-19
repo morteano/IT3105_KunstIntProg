@@ -1,5 +1,4 @@
 from basics.mnist_basics import *
-from LogisticRegression import *
 
 import numpy as np
 import theano
@@ -10,12 +9,9 @@ import matplotlib.pyplot as plt
 import time
 import pickle
 
-helmerPath = "/Users/Butikk/.PyCharm40/AI 5/IT3105_KunstIntProg/Module 5/basics/"
-normannPath = "/Users/MortenAlver/PycharmProjects/IT3105_KunstIntProg/Module 5/basics/"
-
 def createCompVector(label):
     vector = []
-    for i in range(10):
+    for i in range(4):
         vector.append(0)
     vector[label] = 1
     return vector
@@ -26,7 +22,7 @@ def relu(x):
 class ann:
     #initiate values, and start building the neural network.
     #since there can be several layers of hidden nodes, nh is an array with amount of nodes in the corresponding layer
-    def __init__(self, images, labels, ni=28**2, nh=[100], no=10, lr=.1):
+    def __init__(self, images, labels, ni=16, nh=[10, 8], no=4, lr=.1):
         self.cases = images
         self.labels = labels
         self.numInputNodes = ni
@@ -103,11 +99,11 @@ class ann:
                 xLast, error = self.trainer(c, createCompVector(labels[j]))
                 maxValue = xLast[0]
                 maxIndex = 0
-                for k in range(10):
+                for k in range(4):
                     if maxValue < xLast[k]:
                         maxValue = xLast[k]
                         maxIndex = k
-                if maxIndex != labels[j][0]:
+                if maxIndex != labels[j]:
                     mistakes += 1
                 totalError += error
                 j += 1
@@ -128,7 +124,7 @@ class ann:
             xLast = self.predictor(c)
             maxValue = xLast[0]
             maxIndex = 0
-            for k in range(10):
+            for k in range(4):
                 if maxValue < xLast[k]:
                     maxValue = xLast[k]
                     maxIndex = k
@@ -152,33 +148,28 @@ class ann:
             finalResult.append(maxIndex)
         return finalResult
 
-def filter(image):
-    for j in image:
-        for k in range(len(j)):
-            j[k] /= 255.0
-    return image
 
-def filterAll(images):
-    images = images.astype(float)
-    for i in range(len(images)):
-        images[i] = filter(images[i])
-    return images
-
-def getFlatInput(images):
-    images = filterAll(images)
-    flatImages = []
-    for image in images:
-        flatImages.append(flatten_image(image))
-    return flatImages
-
-def runTraining(ni = 28**2, nh = [100], no = 10, lr = .1):
+def runTraining(ni = 16, nh = [10, 8], no = 4, lr = .1):
     #load the training dataset
-    images, labels = load_mnist("training", np.arange(10), helmerPath)
-    flatImages = getFlatInput(images)
+    file = open("PickleMoves", 'rb')
+    data = pickle.load(file)
+    boards = []
+    moves = []
+    i = 0
+    for line in data:
+        boards.append(line[0])
+        if line[1] == 'w':
+            moves.append(0)
+        elif line[1] == 'd':
+            moves.append(1)
+        elif line[1] == 's':
+            moves.append(2)
+        elif line[1] == 'a':
+            moves.append(3)
 
     #create and train the neural network
-    network = ann(flatImages, labels, ni, nh, no, lr)
-    error = network.dotraining(labels, 10)
+    network = ann(boards, moves, ni, nh, no, lr)
+    error = network.dotraining(moves, 100)
 
     #save the trained network
     file = open("trainedAnn", 'wb')
@@ -187,33 +178,45 @@ def runTraining(ni = 28**2, nh = [100], no = 10, lr = .1):
 
     return error
 
-def runTesting(dataset):
+def runTesting():
     #load the trained network
     file = open("trainedAnn", 'rb')
     network = pickle.load(file)
     file.close()
 
     #load the testing dataset
-    testImages, testLabels = load_mnist(dataset, np.arange(10), helmerPath)
-
-    flatTestImages = getFlatInput(testImages)
+    file = open("PickleMoves", 'rb')
+    data = pickle.load(file)
+    print(len(data))
+    boards = []
+    moves = []
+    for i in range(1000, 1100):
+        line = data[i]
+        boards.append(line[0])
+        if line[1] == 'w':
+            moves.append(0)
+        elif line[1] == 'd':
+            moves.append(1)
+        elif line[1] == 's':
+            moves.append(2)
+        elif line[1] == 'a':
+            moves.append(3)
 
     #run the dataset through the trained neural network
-    result = network.blind_test(flatTestImages)
+    result = network.blind_test(boards)
 
     #compare result with right answers and find the correctness percentage
     mistakes = 0
     for i in range(len(result)):
 
-        if result[i] != testLabels[i]:
+        if result[i] != moves[i]:
             mistakes += 1
 
     print("Test mistakes", mistakes)
     print("Percentage", 1 - (mistakes / len(result)))
 
-#error = runTraining(28**2, [100], 10, .1)
-runTesting("training")
-runTesting("testing")
+error = runTraining(16, [10, 8], 4, .1)
+runTesting()
 #case = load_cases("demo_prep", helmerPath, True)
 
 """epochs = []
