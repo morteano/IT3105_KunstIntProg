@@ -374,7 +374,7 @@ def solver(board, gui):
         gui.drawBoard(node.board)
         dir, index = minimax(depth, node)
         if max(board) < 2048:
-            storing = [board, dir]
+            storing = [node.board, dir]
             storings.append(storing)
         else:
             break

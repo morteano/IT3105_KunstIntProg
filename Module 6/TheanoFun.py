@@ -97,6 +97,7 @@ class ann:
             #checks if the guess for every case is right or wrong, and sums up the total amount of mistakes
             for c in self.cases:
                 xLast, error = self.trainer(c, createCompVector(labels[j]))
+                print()
                 maxValue = xLast[0]
                 maxIndex = 0
                 for k in range(4):
@@ -141,7 +142,7 @@ class ann:
             xLast = self.predictor(c)
             maxValue = xLast[0]
             maxIndex = 0
-            for k in range(10):
+            for k in range(4):
                 if maxValue < xLast[k]:
                     maxValue = xLast[k]
                     maxIndex = k
@@ -157,7 +158,10 @@ def runTraining(ni = 16, nh = [10, 8], no = 4, lr = .1):
     moves = []
     i = 0
     for line in data:
-        boards.append(line[0])
+        board = []
+        for i in range(len(line[0])):
+            board.append(line[0][i]/max(line[0]))
+        boards.append(board)
         if line[1] == 'w':
             moves.append(0)
         elif line[1] == 'd':
@@ -166,6 +170,9 @@ def runTraining(ni = 16, nh = [10, 8], no = 4, lr = .1):
             moves.append(2)
         elif line[1] == 'a':
             moves.append(3)
+        if i > 1000:
+            break
+        i += 1
 
     #create and train the neural network
     network = ann(boards, moves, ni, nh, no, lr)
@@ -190,9 +197,12 @@ def runTesting():
     print(len(data))
     boards = []
     moves = []
-    for i in range(1000, 1100):
+    for i in range(len(data)-100, len(data)):
         line = data[i]
-        boards.append(line[0])
+        board = []
+        for i in range(len(line[0])):
+            board.append(line[0][i]/max(line[0]))
+        boards.append(board)
         if line[1] == 'w':
             moves.append(0)
         elif line[1] == 'd':
