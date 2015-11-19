@@ -1,388 +1,414 @@
-from random import randint
-from graphics import *
-import heapq
+from random import randint, random, choice
 import time
-from copy import deepcopy
+from GUI import *
 
-from Tree import *
-
-colors = {8192:"Navy", 4096:"Midnightblue", 2048:"darkred", 1024:"red", 512:"orangered", 256:"darkorange", 128:"orange", 64:"gold", 32:"yellow", 16:"palegreen", 8:"yellowgreen", 4:"lawngreen", 2:"green", 0:"white"}
-graphRect = []
-
-
-class HeapQueue: #Priority queue with heap as data structure
-    def __init__(self):
-        self.elements = []
-
-    def empty(self):
-        return len(self.elements) == 0
-
-    def put(self, item, priority): #adds element to the heap
-        heapq.heappush(self.elements, (priority, item))
-
-    def get(self): #returns the element with lowest value and removes it from the heap
-        return heapq.heappop(self.elements)[1]
-
-class Tile:
-    def __init__(self, xPos, yPos):
-        self.xPos = xPos
-        self.yPos = yPos
-        self.value = 0
-        self.color = colors[self.value]
-
-
-class Board:
-    def __init__(self, size):
-        self.size = size
-        self.emptyNodes = []
-        self.nodes = []
-
+class Node:
+    def __init__(self, board, lastMove):
+        self.board = board
+        self.lastMove = lastMove
         self.children = []
-        self.parent = None
-
-        self.heuristic = 0
-
-        self.graphicRects = []
-
-        self.cameFrom = "qwerty"
-
-        for i in xrange(size):
-            row = []
-            for j in xrange(size):
-                node = Tile(i, j)
-                row.append(node)
-                self.emptyNodes.append(node)
-            self.nodes.append(row)
-
-    def printBoard(self):
-        for i in xrange(self.size):
-            row = []
-            for j in xrange(self.size):
-                row.append(self.nodes[i][j].value)
-            print(row)
-
-    def setValue(self, x, y, value):
-        self.nodes[x][y].value = value
-
-    def spawn(self):
-        random = randint(0, len(self.emptyNodes) - 1)
-        node = self.emptyNodes.pop(random)
-        if randint(0,9) < 9:
-            node.value = 2
-        else:
-            node.value = 4
-        node.color = colors[node.value]
-
-        return random, node.value
-
-    def game(self):
-        screenSize = 600
-        win = GraphWin("2048", screenSize, screenSize)
-        self.spawn()
-        self.drawBoard(screenSize, win)
-        while True:
-            direction = raw_input("Press direction (WASD): ")
-            self.move(direction)
-            self.spawn()
-            self.updateBoard()
-        win.getMouse()
-        win.close()
-
-    def drawBoard(self, screenSize, win):
-        for j in range(self.size):
-            for i in range(self.size):
-                rect = Rectangle(Point(i*screenSize/self.size, j*screenSize/self.size),Point((i+1)*screenSize/self.size, (j+1)*screenSize/self.size))
-                rect.setFill(self.nodes[j][i].color)
-                rect.setFill(colors[self.nodes[j][i].value])
-                value = Text(Point((i+0.5)*screenSize/self.size, (j+0.5)*screenSize/self.size), self.nodes[j][i].value)
-                self.graphicRects.append([rect, self.nodes[j][i].color, value])
-                rect.draw(win)
-                #if self.nodes[j][i].value != 0:
-                value.draw(win)
 
 
+boardSize = 4
+inf = float("inf")
 
-    def updateBoard(self):
-        change = False
-        for j in range(self.size):
-            for i in range(self.size):
-                index = (j * self.size) + i
-                if self.graphicRects[index][1] != self.nodes[j][i].color:
-                    self.graphicRects[index][0].setFill(self.nodes[j][i].color)
-                    self.graphicRects[index][1] = self.nodes[j][i].color
-                    self.graphicRects[index][2].setText(self.nodes[j][i].value)
-                    change = True
-        return change
 
-    def move(self, direction):
-        if direction == 'a':
-            self.moveLeft()
-        elif direction == "d":
-            self.moveRight()
-        elif direction == "w":
-            self.moveUp()
-        elif direction == "s":
-            self.moveDown()
-        self.cameFrom = direction
+# Prints board as text
+def printBoard(board):
+    for i in xrange(boardSize):
+        row = []
+        for j in xrange(boardSize):
+            row.append(board[boardSize*i+j])
+        print(row)
+    print(" ")
 
-    def moveLeft(self):
-        for i in range(self.size):
-            tempValue = 0
-            index = 0
-            for j in range(self.size):
-                if tempValue != 0:
-                    if tempValue == self.nodes[i][j].value:
-                        tempNode.value *= 2
-                        tempNode.color = colors[tempNode.value]
-                        self.nodes[i][j].value = 0
-                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
-                        self.emptyNodes.append(self.nodes[i][j])
-                        tempValue = 0
-                if self.nodes[i][j].value != 0:
-                    tempValue = self.nodes[i][j].value
-                    if j != index:
-                        self.nodes[i][index].value = self.nodes[i][j].value
-                        self.nodes[i][index].color = colors[self.nodes[i][index].value]
-                        self.nodes[i][j].value = 0
-                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
-                        self.emptyNodes.pop(self.emptyNodes.index(self.nodes[i][index]))
-                        self.emptyNodes.append(self.nodes[i][j])
-                    tempNode = self.nodes[i][index]
-                    index += 1
-        return self
 
-    def moveRight(self):
-        for i in range(self.size):
-            tempValue = 0
-            index = self.size - 1
-            for j in range(self.size - 1, -1, -1):
-                if tempValue != 0:
-                    if tempValue == self.nodes[i][j].value:
-                        tempNode.value *= 2
-                        tempNode.color = colors[tempNode.value]
-                        self.nodes[i][j].value = 0
-                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
-                        self.emptyNodes.append(self.nodes[i][j])
-                        tempValue = 0
-                if self.nodes[i][j].value != 0:
-                    tempValue = self.nodes[i][j].value
-                    if j != index:
-                        self.nodes[i][index].value = self.nodes[i][j].value
-                        self.nodes[i][index].color = colors[self.nodes[i][index].value]
-                        self.nodes[i][j].value = 0
-                        self.nodes[i][j].color = colors[self.nodes[i][j].value]
-                        self.emptyNodes.pop(self.emptyNodes.index(self.nodes[i][index]))
-                        self.emptyNodes.append(self.nodes[i][j])
-                    tempNode = self.nodes[i][index]
-                    index -= 1
-        return self
+# Spawns a tile with 0.9 prob of being 2, 0.1 prob of being 4 in an empty tile
+def spawn(board):
+    emptyNodes = []
+    for i in range(len(board)):
+        if board[i] == 0:
+            emptyNodes.append(i)
+    random = randint(0, len(emptyNodes) - 1)
+    if randint(0,9) < 9:
+        board[emptyNodes[random]] = 2
+    else:
+        board[emptyNodes[random]] = 4
+    return board, random, board[emptyNodes[random]], emptyNodes[random]
 
-    def moveUp(self):
-        for i in range(self.size):
-            tempValue = 0
-            index = 0
-            for j in range(self.size):
-                if tempValue != 0:
-                    if tempValue == self.nodes[j][i].value:
-                        tempNode.value *= 2
-                        tempNode.color = colors[tempNode.value]
-                        self.nodes[j][i].value = 0
-                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
-                        self.emptyNodes.append(self.nodes[j][i])
-                        tempValue = 0
-                if self.nodes[j][i].value != 0:
-                    tempValue = self.nodes[j][i].value
-                    if j != index:
-                        self.nodes[index][i].value = self.nodes[j][i].value
-                        self.nodes[index][i].color = colors[self.nodes[index][i].value]
-                        self.nodes[j][i].value = 0
-                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
-                        self.emptyNodes.pop(self.emptyNodes.index(self.nodes[index][i]))
-                        self.emptyNodes.append(self.nodes[j][i])
-                    tempNode = self.nodes[index][i]
-                    index += 1
-        return self
 
-    def moveDown(self):
-        for i in range(self.size):
-            tempValue = 0
-            index = self.size - 1
-            for j in range(self.size - 1, -1, -1):
-                if tempValue != 0:
-                    if tempValue == self.nodes[j][i].value:
-                        tempNode.value *= 2
-                        tempNode.color = colors[tempNode.value]
-                        self.nodes[j][i].value = 0
-                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
-                        self.emptyNodes.append(self.nodes[j][i])
-                        tempValue = 0
-                if self.nodes[j][i].value != 0:
-                    tempValue = self.nodes[j][i].value
-                    if j != index:
-                        self.nodes[index][i].value = self.nodes[j][i].value
-                        self.nodes[index][i].color = colors[self.nodes[index][i].value]
-                        self.nodes[j][i].value = 0
-                        self.nodes[j][i].color = colors[self.nodes[j][i].value]
-                        self.emptyNodes.pop(self.emptyNodes.index(self.nodes[index][i]))
-                        self.emptyNodes.append(self.nodes[j][i])
-                    tempNode = self.nodes[index][i]
-                    index -= 1
-        return self
+# Moves all tiles to the input direction
+def move(board, direction):
+    modified = False
+    if direction == 'a':
+        board,  modified = moveLeft(board)
+    elif direction == "d":
+        board,  modified = moveRight(board)
+    elif direction == "w":
+        board,  modified = moveUp(board)
+    elif direction == "s":
+        board,  modified = moveDown(board)
+    return board, modified
 
+
+def moveLeft(board):
+    modified = False
+    for i in range(boardSize):
+        tempValue = 0
+        index = 0
+        for j in range(boardSize):
+            if tempValue != 0:
+                if tempValue == board[boardSize*i+j]:
+                    modified = True
+                    board[tempNodeIndex] *= 2
+                    board[boardSize*i+j] = 0
+                    tempValue = 0
+            if board[boardSize*i+j] != 0:
+                tempValue = board[boardSize*i+j]
+                if j != index:
+                    modified = True
+                    board[boardSize*i+index] = board[boardSize*i+j]
+                    board[boardSize*i+j] = 0
+                tempNodeIndex = boardSize*i+index
+                index += 1
+    return board, modified
+
+
+def moveRight(board):
+    modified = False
+    for i in range(boardSize):
+        tempValue = 0
+        index = boardSize - 1
+        for j in range(boardSize - 1, -1, -1):
+            if tempValue != 0:
+                if tempValue == board[boardSize*i+j]:
+                    modified = True
+                    board[tempNodeIndex] *= 2
+                    board[boardSize*i+j] = 0
+                    tempValue = 0
+            if board[boardSize*i+j] != 0:
+                tempValue = board[boardSize*i+j]
+                if j != index:
+                    modified = True
+                    board[boardSize*i+index] = board[boardSize*i+j]
+                    board[boardSize*i+j] = 0
+                tempNodeIndex = boardSize*i+index
+                index -= 1
+    return board, modified
+
+
+def moveUp(board):
+    modified = False
+    for i in range(boardSize):
+        tempValue = 0
+        index = 0
+        for j in range(boardSize):
+            if tempValue != 0:
+                if tempValue == board[boardSize*j+i]:
+                    modified = True
+                    board[tempNodeIndex] *= 2
+                    board[boardSize*j+i] = 0
+                    tempValue = 0
+            if board[boardSize*j+i] != 0:
+                tempValue = board[boardSize*j+i]
+                if j != index:
+                    modified = True
+                    board[boardSize*index+i] = board[boardSize*j+i]
+                    board[boardSize*j+i] = 0
+                tempNodeIndex = boardSize*index+i
+                index += 1
+    return board, modified
+
+
+def moveDown(board):
+    modified = False
+    for i in range(boardSize):
+        tempValue = 0
+        index = boardSize - 1
+        for j in range(boardSize - 1, -1, -1):
+            if tempValue != 0:
+                if tempValue == board[boardSize*j+i]:
+                    modified = True
+                    board[tempNodeIndex] *= 2
+                    board[boardSize*j+i] = 0
+                    tempValue = 0
+            if board[boardSize*j+i] != 0:
+                tempValue = board[boardSize*j+i]
+                if j != index:
+                    modified = True
+                    board[boardSize*index+i] = board[boardSize*j+i]
+                    board[boardSize*j+i] = 0
+                tempNodeIndex = boardSize*index+i
+                index -= 1
+    return board, modified
+
+
+# Playable game with WASD-buttons as input
+def game(board):
+    board, dummy, dummy, dummy = spawn(board)
+    gui = getNewBoardWindow(4, None)
+    while True:
+        direction = raw_input("Press direction (WASD): ")
+        board, modified = move(board, direction)
+        if modified:
+            board, dummy, dummy, dummy = spawn(board)
+            gui.drawBoard(board)
+
+
+# Checks if there is possible to perform a legal move
 def legalMoves(board):
     movable = False
-    for i in xrange(board.size-1):
-        for j in xrange(board.size):
-            if board.nodes[i][j].value == board.nodes[i+1][j].value:
+    for i in xrange(boardSize-1):
+        for j in xrange(boardSize):
+            if board[boardSize*i+j] == board[boardSize*(i+1)+j]:
                 movable = True
-    for i in xrange(board.size):
-        for j in xrange(board.size-1):
-            if board.nodes[i][j].value == board.nodes[i][j+1].value:
+    for i in xrange(boardSize):
+        for j in xrange(boardSize-1):
+            if board[boardSize*i+j] == board[boardSize*i+j+1]:
                 movable = True
     return movable
 
-def createAllPossibleBoards(board):
-    list = []
-    for i in board.emptyNodes:
-        child1 = deepcopy(board)
-        node1 = child1.nodes[i.xPos][i.yPos]
-        node1.value = 2
-        child1.emptyNodes.pop(child1.emptyNodes.index(node1))
-        child2 = deepcopy(board)
-        node2 = child2.nodes[i.xPos][i.yPos]
-        node2.value = 4
-        child2.emptyNodes.pop(child2.emptyNodes.index(node2))
-        list.append(child1)
-        list.append(child2)
 
-    return list
+# Creates all possible board depending on where the new tile appears
+def createAllPossibleBoards(node):
+    emptyNodes = []
+    for i in range(len(node.board)):
+        if node.board[i] == 0:
+            emptyNodes.append(i)
+    nodeList = []
+    for i in emptyNodes:
+        child1 = Node(list(node.board), node.lastMove)
+        child1.board[i] = 2
+        nodeList.append(child1)
+    return nodeList
 
 
-def createTree(tree, depth, root):
-    if depth == 0:
-        return
-
-    for i in ["a", "d", "w", "s"]:
-        board = deepcopy(root)
-        board.move(i)
-        tree.addNode(board, root)
-    for i in root.children:
-        children = createAllPossibleBoards(i)
-        for j in children:
-            tree.addNode(j, i)
-            createTree(tree, depth - 2, j)
-
-
-"""def addToTree(tree, depth, root, extraDepth):
-    if depth == 0:
-        createTree(tree, extraDepth, root)
-    for i in root.children:
-        for j in i.children:
-            addToTree(tree, depth - 2, j, extraDepth - 2)"""
-
-def minimax(tree, depth, root):
-    maxHeuristic = 0
+# Uses minimax to get most promising direction to move
+def minimax(depth, root):
+    maxHeuristic = -1
     dir = ""
+    bestIndex = 0
+    index = 0
     for i in root.children:
-        heurI = findHeuristic(tree, depth, i)
+        heurI = findHeuristicMiniMaxAlphaBeta(depth-1, i, 0, -inf, inf)
         if  heurI > maxHeuristic:
             maxHeuristic = heurI
-            dir = i.cameFrom
-    return dir
+            dir = i.lastMove
+            bestIndex = index
+        index += 1
+    return dir, bestIndex
 
-def findHeuristic(tree, depth, root):
+
+# Unused function to find expectimax heuristics
+def findHeuristic(depth, root, heur):
     if depth == 0:
-        return heuristic(root)
-    elif depth%2 == 1:
-        heur = 0
+        return heur + heuristicBoard(root.board)
+    elif depth % 2 == 1:
         for i in root.children:
-            it = 0
-            if it%2 == 0:
-                prob = 0.9
-            else:
-                prob = 0.1
-            it += 1
-            heur += findHeuristic(tree, depth-1, i)*prob
+            heur += (findHeuristic(depth-1, i, 0))/len(root.children)
         return heur
     else:
         for i in root.children:
-            return findHeuristic(tree, depth-1, i)
+            heur += findHeuristic(depth-1, i, 0)/len(root.children)
+        return heur
 
 
-def heuristic(board):
-    return 16-len(board.emptyNodes)
-
-
-def solver(board):
-    #screenSize = 600
-    #win = GraphWin("2048", screenSize, screenSize)
-    #board.drawBoard(screenSize, win)
-    currentBoard = board
-
-    heap = HeapQueue()
-
-    depth = 2
-
-    tree = Tree()
-
-
-    while True:
-
-        tree.addNode(currentBoard, None)
-        createTree(tree, depth, currentBoard)
-        tree.depth = depth
-
-        if len(currentBoard.emptyNodes) <= 0:
-            if not legalMoves(currentBoard):
+# Search through the tree with alphabeta pruning. But gives the leaf nodes the heuristic of all nodes in the path.
+def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
+    heur += heuristicBoard(root.board)
+    if depth == 0:
+        return heur
+    elif depth % 2 == 1:
+        v = inf
+        for i in root.children:
+            v = min(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, heur, alpha, beta))
+            beta = min(beta, v)
+            if beta <= alpha:
                 break
-        currentBoard.move(minimax(tree, depth, currentBoard))
-
-        if currentBoard.cameFrom == "a":
-            currentChild = currentBoard.children[0]
-        elif currentBoard.cameFrom == "d":
-            currentChild = currentBoard.children[1]
-        elif currentBoard.cameFrom == "w":
-            currentChild = currentBoard.children[2]
-        else:
-            currentChild = currentBoard.children[3]
-
-        childIndex, value = currentChild.spawn()
+        return v
+    else:
+        v = 0
+        for i in root.children:
+            v = max(v, findHeuristicMiniMaxAlphaBeta(depth-1, i, heur, alpha, beta))
+            alpha = max(alpha, v)
+            if beta <= alpha:
+                break
+        return v
 
 
-        root = currentChild.children[(childIndex * 2) + (value / 2) - 1]
+# Returns a heuristic for the board based on a zigzag pattern from the corners
+def heuristicBoard(board):
+    heuristicList = [200, 100, 50, 25, 20, 18, 16, 12, 10, 8, 7, 6, 5, 4, 3, 2]
+    heur = 0
+    if max(board) == board[15]:
+        heur += board[15]*heuristicList[0]
+        heur += board[14]*heuristicList[1]
+        heur += board[13]*heuristicList[2]
+        heur += board[12]*heuristicList[3]
+        heur += board[8]*heuristicList[4]
+        heur += board[9]*heuristicList[5]
+        heur += board[10]*heuristicList[6]
+        heur += board[11]*heuristicList[7]
+        heur += board[7]*heuristicList[8]
+        heur += board[6]*heuristicList[9]
+        heur += board[5]*heuristicList[10]
+        heur += board[4]*heuristicList[11]
+        heur += board[0]*heuristicList[12]
+        heur += board[1]*heuristicList[13]
+        heur += board[2]*heuristicList[14]
+        heur += board[3]*heuristicList[15]
 
-        tree.reset()
+    elif max(board) == board[0]:
+        heur += board[0]*heuristicList[0]
+        heur += board[1]*heuristicList[1]
+        heur += board[2]*heuristicList[2]
+        heur += board[3]*heuristicList[3]
+        heur += board[7]*heuristicList[4]
+        heur += board[6]*heuristicList[5]
+        heur += board[5]*heuristicList[6]
+        heur += board[4]*heuristicList[7]
+        heur += board[8]*heuristicList[8]
+        heur += board[9]*heuristicList[9]
+        heur += board[10]*heuristicList[10]
+        heur += board[11]*heuristicList[11]
+        heur += board[15]*heuristicList[12]
+        heur += board[14]*heuristicList[13]
+        heur += board[13]*heuristicList[14]
+        heur += board[12]*heuristicList[15]
 
-        currentBoard = deepcopy(root)
-        createTree(tree, depth, currentBoard)
-        currentBoard.printBoard()
-        print("")
-        time.sleep(1)
+    elif max(board) == board[3]:
+        heur += board[3]*heuristicList[0]
+        heur += board[2]*heuristicList[1]
+        heur += board[1]*heuristicList[2]
+        heur += board[0]*heuristicList[3]
+        heur += board[4]*heuristicList[4]
+        heur += board[5]*heuristicList[5]
+        heur += board[6]*heuristicList[6]
+        heur += board[7]*heuristicList[7]
+        heur += board[11]*heuristicList[8]
+        heur += board[10]*heuristicList[9]
+        heur += board[9]*heuristicList[10]
+        heur += board[8]*heuristicList[11]
+        heur += board[12]*heuristicList[12]
+        heur += board[13]*heuristicList[13]
+        heur += board[14]*heuristicList[14]
+        heur += board[15]*heuristicList[15]
 
-    #win.getMouse()
-    #win.close()"""
+    elif max(board) == board[12]:
+        heur += board[12]*heuristicList[0]
+        heur += board[13]*heuristicList[1]
+        heur += board[14]*heuristicList[2]
+        heur += board[15]*heuristicList[3]
+        heur += board[11]*heuristicList[4]
+        heur += board[10]*heuristicList[5]
+        heur += board[9]*heuristicList[6]
+        heur += board[8]*heuristicList[7]
+        heur += board[4]*heuristicList[8]
+        heur += board[5]*heuristicList[9]
+        heur += board[6]*heuristicList[10]
+        heur += board[7]*heuristicList[11]
+        heur += board[3]*heuristicList[12]
+        heur += board[2]*heuristicList[13]
+        heur += board[1]*heuristicList[14]
+        heur += board[0]*heuristicList[15]
+
+    # Add a small value for merging tiles
+    heur += 10*board.count(0)
+    return heur
 
 
-"""def dummySolve():
-    screenSize = 600
-    win = GraphWin("2048", screenSize, screenSize)
-    self.spawn()
-    self.drawBoard(screenSize, win)
-    counter = 0
+# Add parent-child relations to the nodes in the tree
+def addRelations(depth, root):
+    if depth == 0:
+        return
+    for i in ["a", "d", "w", "s"]:
+        board = list(root.board)
+        board, modified = move(board, i)
+        if modified:
+            node = Node(board, i)
+            node.parent = root
+            root.children.append(node)
+
+    for i in root.children:
+        children = createAllPossibleBoards(i)
+
+        for j in children:
+            j.parent = i
+            i.children.append(j)
+            addRelations(depth - 2, j)
+
+
+# Remove parent-child relations to free up memory space
+def removeRelations(root):
+    for i in root.children:
+        for j in i.children:
+            j.children = []
+        i.children = []
+    root = None
+
+
+# So far unused function for reusing a subtree to make the algorithm faster
+def reuseRelations(depth, extraDepth, root):
+    if depth == 0:
+        addRelations(extraDepth, root)
+    else:
+        for child in root.children:
+            for grandchild in child.children:
+                reuseRelations(depth-2, extraDepth, grandchild)
+
+
+# Tries to solve the game
+def solver(board, gui):
+    board, random, value, boardIndex = spawn(board)
+    depth = 6
+    node = Node(board, None)
+    addRelations(depth, node)
+
     while True:
-        if counter%2 == 0:
-            self.move('s')
-        elif counter%101 == 0:
-            self.move('d')
-        else:
-            self.move('a')
-        if self.updateBoard():
-            self.spawn()
-        counter += 1
-        time.sleep(0.05)
-    win.getMouse()"""
+        empty = board.count(0)
+        if empty == 0:
+            if not legalMoves(board):
+                break
+        oldNode = node
+        gui.drawBoard(node.board)
+        dir, index = minimax(depth, node)
+        board, modified = move(board, dir)
+        board, childIndex, value, boardIndex = spawn(board)
+        node = oldNode.children[index].children[childIndex]
+        node.board[boardIndex] = value
+        node.parent = None
+        removeRelations(oldNode)
+        addRelations(depth, node)
+    gui.drawBoard(node.board)
+    return node.board
 
-board = Board(4)
-board.spawn()
-#board.game()
-solver(board)
+
+# Runs the solver iteration number of times and prints the output
+def testRuns(iterations):
+    gui = getNewBoardWindow(4, None)
+    maxTiles = {32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0, 8192:0}
+    totalTime = 0
+    for i in range(iterations):
+        board = [0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0]
+        start = time.time()
+        board = solver(board, gui)
+        t = time.time()-start
+        print(str(int(t)/60) + " min and " + str(int(t)%60) + " sec")
+        print(board)
+        maxTiles[max(board)] += 1
+        if (i+1) % 10 == 0:
+            print(maxTiles)
+            print(maxTiles[2048], maxTiles[4096], sum(maxTiles.values()))
+            print("Success rate: " + str((float(maxTiles[2048]+maxTiles[4096]))/sum(maxTiles.values())))
+        totalTime += t
+        time.sleep(3)
+    print(maxTiles)
+    print("Success rate: " + str(float(maxTiles[2048]+maxTiles[4096]+maxTiles[8192])/sum(maxTiles.values())))
+    avgT = totalTime/iterations
+    print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
+
+
+testRuns(1)
