@@ -97,7 +97,6 @@ class ann:
             #checks if the guess for every case is right or wrong, and sums up the total amount of mistakes
             for c in self.cases:
                 xLast, error = self.trainer(c, createCompVector(labels[j]))
-                print()
                 maxValue = xLast[0]
                 maxIndex = 0
                 for k in range(4):
@@ -111,7 +110,8 @@ class ann:
 
             errors.append(totalError)
             print("Error", totalError)
-            print("Amount of mistakes", mistakes)
+            print("Amount of mistakes", mistakes, "/", len(self.cases))
+            print("Percentage", 1-mistakes/len(self.cases))
             print("Epoch", i)
         end = time.time()
         print("Total training time", end - start)
@@ -154,6 +154,7 @@ def runTraining(ni = 16, nh = [10, 8], no = 4, lr = .1):
     #load the training dataset
     file = open("PickleMoves", 'rb')
     data = pickle.load(file)
+    file.close()
     boards = []
     moves = []
     i = 0
@@ -170,7 +171,7 @@ def runTraining(ni = 16, nh = [10, 8], no = 4, lr = .1):
             moves.append(2)
         elif line[1] == 'a':
             moves.append(3)
-        if i > 1000:
+        if i >= len(data)-100:
             break
         i += 1
 
@@ -194,6 +195,7 @@ def runTesting():
     #load the testing dataset
     file = open("PickleMoves", 'rb')
     data = pickle.load(file)
+    file.close
     print(len(data))
     boards = []
     moves = []

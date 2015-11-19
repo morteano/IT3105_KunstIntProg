@@ -216,7 +216,7 @@ def findHeuristic(depth, root, heur):
 
 # Search through the tree with alphabeta pruning. But gives the leaf nodes the heuristic of all nodes in the path.
 def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
-    heur += heuristicBoard(root.board)
+    heur += heuristicDownLeft(root.board)
     if depth == 0:
         return heur
     elif depth % 2 == 1:
@@ -318,6 +318,32 @@ def heuristicBoard(board):
     return heur
 
 
+# Returns a heuristic for the board based on a zigzag pattern from the corners
+def heuristicDownLeft(board):
+    heuristicList = [200, 100, 50, 25, 20, 18, 16, 12, 10, 8, 7, 6, 5, 4, 3, 2]
+    heur = 0
+    if max(board) == board[12]:
+        heur += board[12]*heuristicList[0]
+        heur += board[13]*heuristicList[1]
+        heur += board[14]*heuristicList[2]
+        heur += board[15]*heuristicList[3]
+        heur += board[11]*heuristicList[4]
+        heur += board[10]*heuristicList[5]
+        heur += board[9]*heuristicList[6]
+        heur += board[8]*heuristicList[7]
+        heur += board[4]*heuristicList[8]
+        heur += board[5]*heuristicList[9]
+        heur += board[6]*heuristicList[10]
+        heur += board[7]*heuristicList[11]
+        heur += board[3]*heuristicList[12]
+        heur += board[2]*heuristicList[13]
+        heur += board[1]*heuristicList[14]
+        heur += board[0]*heuristicList[15]
+
+    # Add a small value for merging tiles
+    heur += 10*board.count(0)
+    return heur
+
 # Add parent-child relations to the nodes in the tree
 def addRelations(depth, root):
     if depth == 0:
@@ -386,12 +412,12 @@ def solver(board, gui):
         removeRelations(oldNode)
         addRelations(depth, node)
     gui.drawBoard(node.board)
-    #text_file = open("PickleMoves", "rb")
-    #storing = pickle.load(text_file)
-    #text_file.close()
-    # store in storing:
-    #    storings.append(store)
-    text_file2 = open("PickleMoves", "wb")
+    text_file = open("MovesDownLeft", "rb")
+    storing = pickle.load(text_file)
+    text_file.close()
+    for store in storing:
+       storings.append(store)
+    text_file2 = open("MovesDownLeft", "wb")
     pickle.dump(storings, text_file2, protocol=pickle.HIGHEST_PROTOCOL)
     text_file2.close()
     return node.board
@@ -425,4 +451,4 @@ def testRuns(iterations):
     print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
 
 
-testRuns(1)
+testRuns(10)
