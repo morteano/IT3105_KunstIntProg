@@ -392,6 +392,12 @@ def solver(board, gui):
     depth = 6
     node = Node(board, None)
     addRelations(depth, node)
+
+    # Gather data
+    dirs = []
+    file = open("trainedAnn", 'rb')
+    network = pickle.load(file)
+    file.close()
     storings = []
     while True:
         empty = board.count(0)
@@ -401,25 +407,28 @@ def solver(board, gui):
         oldNode = node
         gui.drawBoard(node.board)
         dir, index = minimax(depth, node)
+        dir = selectOtherMove([board], dirs, network)
         if max(board) < 2048:
             storing = [node.board, dir]
             storings.append(storing)
         else:
             break
         board, modified = move(board, dir)
-        board, childIndex, value, boardIndex = spawn(board)
-        node = oldNode.children[index].children[childIndex]
-        node.board[boardIndex] = value
-        node.parent = None
-        removeRelations(oldNode)
-        addRelations(depth, node)
+        if modified:
+            dirs = []
+            board, childIndex, value, boardIndex = spawn(board)
+            node = Node(board, None)
+            addRelations(depth, node)
+        else:
+            dirs.append(dir)
+
     gui.drawBoard(node.board)
-    text_file = open("PickleMoves", "rb")
-    storing = pickle.load(text_file)
-    text_file.close()
-    for store in storing:
-       storings.append(store)
-    text_file2 = open("PickleMoves", "wb")
+    # text_file = open("BadMoves", "rb")
+    # storing = pickle.load(text_file)
+    # text_file.close()
+    # for store in storing:
+    #    storings.append(store)
+    text_file2 = open("BadMoves", "wb")
     pickle.dump(storings, text_file2, protocol=pickle.HIGHEST_PROTOCOL)
     text_file2.close()
     return node.board
@@ -434,7 +443,7 @@ def testRun(iterations, gui):
              0, 0, 0, 0,
              0, 0, 0, 0]
         start = time.time()
-        board = networkPlay(board, gui)
+        board = solver(board, gui)
         t = time.time()-start
         print(str(int(t)/60) + " min and " + str(int(t)%60) + " sec")
         print(board)
@@ -453,6 +462,10 @@ def testRun(iterations, gui):
 def networkPlay(board, gui):
     board, random, value, boardIndex = spawn(board)
     dirs = []
+    file = open("trainedAnn", 'rb')
+    network = pickle.load(file)
+    file.close()
+    storings = []
     while True:
         empty = board.count(0)
         if empty == 0:
@@ -460,9 +473,7 @@ def networkPlay(board, gui):
                 break
         print(board)
         gui.drawBoard(board)
-        start = time.time()
-        dir = selectOtherMove([board], dirs)
-        print(time.time()-start)
+        dir = selectOtherMove([board], dirs, network)
         print(dir)
         board, modified = move(board, dir)
         if modified:
@@ -482,4 +493,4 @@ def main(iterations):
     gui.mainloop()
 
 
-main(1)
+main(10)

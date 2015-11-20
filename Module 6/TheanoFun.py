@@ -177,7 +177,7 @@ class ann:
 
 def runTraining(ni = 17, nh = [17, 17, 17, 17], no = 4, lr = .1):
     #load the training dataset
-    file = open("ExtraInfo", 'rb')
+    file = open("ExtraInfoBadMoves", 'rb')
     data = pickle.load(file)
     file.close()
     boards = []
@@ -205,7 +205,7 @@ def runTraining(ni = 17, nh = [17, 17, 17, 17], no = 4, lr = .1):
     error = network.dotraining(moves, 100)
 
     #save the trained network
-    file = open("trainedAnn", 'wb')
+    file = open("trainedAnnBadmoves", 'wb')
     pickle.dump(network, file, protocol=pickle.HIGHEST_PROTOCOL)
     file.close()
 
@@ -213,14 +213,14 @@ def runTraining(ni = 17, nh = [17, 17, 17, 17], no = 4, lr = .1):
 
 def runTesting():
     #load the trained network
-    file = open("trainedAnn", 'rb')
+    file = open("trainedAnnBadmoves", 'rb')
     network = pickle.load(file)
     file.close()
 
     #load the testing dataset
-    file = open("ExtraInfo", 'rb')
+    file = open("ExtraInfoBadMoves", 'rb')
     data = pickle.load(file)
-    file.close
+    file.close()
     print(len(data))
     boards = []
     moves = []
@@ -283,12 +283,7 @@ def selectMove(board):
     move = possibilities[moveNum[0]]
     return move
 
-def selectOtherMove(board, dir):
-    # Get stored network
-    file = open("trainedAnn", 'rb')
-    network = pickle.load(file)
-    file.close()
-
+def selectOtherMove(board, dir, network):
     # Filter
     networkBoard = [[]]
     for i in range(len(board[0])):
@@ -315,6 +310,6 @@ def selectOtherMove(board, dir):
     print(move)
     return move
 
-# error = runTraining(17, [10, 8], 4, .1)
+error = runTraining(17, [15, 10], 4, .1)
 # runTesting()
 # selectMove([[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]])

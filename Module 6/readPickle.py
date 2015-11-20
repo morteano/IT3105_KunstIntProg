@@ -1,6 +1,6 @@
 import pickle
 
-file = open("PickleMoves", 'rb')
+file = open("BadMoves", 'rb')
 data = pickle.load(file)
 file.close()
 
@@ -20,7 +20,7 @@ for line in data:
     else:
         line[0].append(element)
 
-new_file = open("ExtraInfo", "wb")
+new_file = open("ExtraInfoBadMoves", "wb")
 pickle.dump(data, new_file, protocol=pickle.HIGHEST_PROTOCOL)
 new_file.close()
 
