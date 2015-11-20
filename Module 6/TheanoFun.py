@@ -149,6 +149,31 @@ class ann:
             finalResult.append(maxIndex)
         return finalResult
 
+    def blind_test_restricted(self, feature_sets, dir):
+        finalResult = []
+        dirs = []
+        for d in dir:
+            print(d)
+            if d == 'w':
+                dirs.append(0)
+            elif d == 'd':
+                dirs.append(1)
+            elif d == 's':
+                dirs.append(2)
+            elif d == 'a':
+                dirs.append(3)
+        for c in feature_sets:
+            xLast = self.predictor(c)
+            maxValue = -1
+            maxIndex = -1
+            for k in range(4):
+                if maxValue < xLast[k] and k not in dirs:
+                    maxValue = xLast[k]
+                    maxIndex = k
+            print("Something", maxIndex, dirs)
+            finalResult.append(maxIndex)
+        return finalResult
+
 
 def runTraining(ni = 17, nh = [17, 17, 17, 17], no = 4, lr = .1):
     #load the training dataset
@@ -256,6 +281,38 @@ def selectMove(board):
     print(moveNum)
     possibilities = ["w","d","s","a"]
     move = possibilities[moveNum[0]]
+    return move
+
+def selectOtherMove(board, dir):
+    # Get stored network
+    file = open("trainedAnn", 'rb')
+    network = pickle.load(file)
+    file.close()
+
+    # Filter
+    networkBoard = [[]]
+    for i in range(len(board[0])):
+        networkBoard[0].append(board[0][i]/max(board[0]))
+
+    # Make input ready for insertion
+    if max(board[0]) == board[0][0]:
+        element = 2048
+    elif max(board[0]) == board[0][3]:
+        element = 1536
+    elif max(board[0]) == board[0][15]:
+        element = 1024
+    elif max(board[0]) == board[0][11]:
+        element = 512
+    else:
+        element = 0.0
+    networkBoard[0].append(element)
+
+    # Get a move using the network
+    moveNum = network.blind_test_restricted(networkBoard, dir)
+    print(moveNum)
+    possibilities = ["w","d","s","a"]
+    move = possibilities[moveNum[0]]
+    print(move)
     return move
 
 # error = runTraining(17, [10, 8], 4, .1)

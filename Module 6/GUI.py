@@ -27,7 +27,7 @@ class GUI(Frame):
 
 
     def setTile(self, value, x, y):
-        self.cells[y][x].config({"bg": GUI.cellColors[min(4096, value)], "fg": ("#776E65" if value < 8 else "#f9f6f2"), "text": str(value) if value else ''})
+        self.cells[3-x][y].config({"bg": GUI.cellColors[min(4096, value)], "fg": ("#776E65" if value < 8 else "#f9f6f2"), "text": str(value) if value else ''})
 
 
     def drawBoard(self, board):

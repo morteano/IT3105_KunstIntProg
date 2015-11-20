@@ -452,6 +452,7 @@ def testRun(iterations, gui):
 
 def networkPlay(board, gui):
     board, random, value, boardIndex = spawn(board)
+    dirs = []
     while True:
         empty = board.count(0)
         if empty == 0:
@@ -459,12 +460,19 @@ def networkPlay(board, gui):
                 break
         print(board)
         gui.drawBoard(board)
-        dir = selectMove([board])
+        start = time.time()
+        dir = selectOtherMove([board], dirs)
+        print(time.time()-start)
         print(dir)
         board, modified = move(board, dir)
-        board, childIndex, value, boardIndex = spawn(board)
+        if modified:
+            dirs = []
+            board, childIndex, value, boardIndex = spawn(board)
+        else:
+            dirs.append(dir)
     gui.drawBoard(board)
     return board
+
 
 # Runs the solver iteration number of times and prints the output
 def main(iterations):
