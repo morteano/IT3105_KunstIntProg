@@ -310,6 +310,6 @@ def selectOtherMove(board, dir, network):
     print(move)
     return move
 
-error = runTraining(17, [15, 10], 4, .1)
+# error = runTraining(17, [15, 10], 4, .1)
 # runTesting()
 # selectMove([[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]])

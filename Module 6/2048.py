@@ -428,7 +428,7 @@ def solver(board, gui):
     # text_file.close()
     # for store in storing:
     #    storings.append(store)
-    text_file2 = open("BadMoves", "wb")
+    text_file2 = open("BadMovestest", "wb")
     pickle.dump(storings, text_file2, protocol=pickle.HIGHEST_PROTOCOL)
     text_file2.close()
     return node.board
