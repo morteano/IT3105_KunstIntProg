@@ -2,6 +2,8 @@ from random import randint, random, choice
 import time
 from GUI import *
 import pickle
+from threading import Thread
+from TheanoFun import *
 
 class Node:
     def __init__(self, board, lastMove):
@@ -216,7 +218,7 @@ def findHeuristic(depth, root, heur):
 
 # Search through the tree with alphabeta pruning. But gives the leaf nodes the heuristic of all nodes in the path.
 def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
-    heur += heuristicDownLeft(root.board)
+    heur += heuristicBoard(root.board)
     if depth == 0:
         return heur
     elif depth % 2 == 1:
@@ -412,20 +414,18 @@ def solver(board, gui):
         removeRelations(oldNode)
         addRelations(depth, node)
     gui.drawBoard(node.board)
-    text_file = open("MovesDownLeft", "rb")
+    text_file = open("PickleMoves", "rb")
     storing = pickle.load(text_file)
     text_file.close()
     for store in storing:
        storings.append(store)
-    text_file2 = open("MovesDownLeft", "wb")
+    text_file2 = open("PickleMoves", "wb")
     pickle.dump(storings, text_file2, protocol=pickle.HIGHEST_PROTOCOL)
     text_file2.close()
     return node.board
 
 
-# Runs the solver iteration number of times and prints the output
-def testRuns(iterations):
-    gui = getNewBoardWindow(4, None)
+def testRun(iterations, gui):
     maxTiles = {32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0, 8192:0}
     totalTime = 0
     for i in range(iterations):
@@ -434,7 +434,7 @@ def testRuns(iterations):
              0, 0, 0, 0,
              0, 0, 0, 0]
         start = time.time()
-        board = solver(board, gui)
+        board = networkPlay(board, gui)
         t = time.time()-start
         print(str(int(t)/60) + " min and " + str(int(t)%60) + " sec")
         print(board)
@@ -450,5 +450,28 @@ def testRuns(iterations):
     avgT = totalTime/iterations
     print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
 
+def networkPlay(board, gui):
+    board, random, value, boardIndex = spawn(board)
+    while True:
+        empty = board.count(0)
+        if empty == 0:
+            if not legalMoves(board):
+                break
+        print(board)
+        gui.drawBoard(board)
+        dir = selectMove([board])
+        print(dir)
+        board, modified = move(board, dir)
+        board, childIndex, value, boardIndex = spawn(board)
+    gui.drawBoard(board)
+    return board
 
-testRuns(10)
+# Runs the solver iteration number of times and prints the output
+def main(iterations):
+    gui = getNewBoardWindow()
+    mainThread = Thread(target=testRun, args = (iterations, gui))
+    mainThread.start()
+    gui.mainloop()
+
+
+main(1)

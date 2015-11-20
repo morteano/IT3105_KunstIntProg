@@ -1,5 +1,5 @@
 from tkinter import *
-from threading import Thread
+
 
 class GUI(Frame):
     cellColors = {0: "#CCC0B3", 2: "#eee4da", 4: "#ede0c8", 8: "#f2b179", 16: "#f59563", 32: "#f67c5f", 64: "#f65e3b", 128: "#edcf72", 256: "#edcc61", 512: "#edc850", 1024: "#edc53f", 2048: "#edc22e", 4096: "#3c3a32"}
@@ -33,7 +33,7 @@ class GUI(Frame):
     def drawBoard(self, board):
         for col in range(4):
             for row in range(4):
-                self.setTile(board[col+4*row], col, 3-row)
+                self.setTile(board[col*4+row], col, row)
 
 
 def getNewBoardWindow(size=4, listener=None):
@@ -41,8 +41,9 @@ def getNewBoardWindow(size=4, listener=None):
     root.title("2048")
     if listener: root.bind("<Key>", listener)
 
-    app = GUI(root, size)
+    return GUI(root, size)
 
-    mainThread = Thread(target=root.mainloop)
-    mainThread.start()
-    return app
+
+#mainThread = Thread(target=self.AI)
+#mainThread.start()
+#self.gui.mainloop()

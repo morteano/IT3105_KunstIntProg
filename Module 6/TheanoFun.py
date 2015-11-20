@@ -22,7 +22,7 @@ def relu(x):
 class ann:
     #initiate values, and start building the neural network.
     #since there can be several layers of hidden nodes, nh is an array with amount of nodes in the corresponding layer
-    def __init__(self, images, labels, ni=16, nh=[10, 8], no=4, lr=.1):
+    def __init__(self, images, labels, ni=17, nh=[10, 8], no=4, lr=.1):
         self.cases = images
         self.labels = labels
         self.numInputNodes = ni
@@ -150,9 +150,9 @@ class ann:
         return finalResult
 
 
-def runTraining(ni = 16, nh = [10, 8], no = 4, lr = .1):
+def runTraining(ni = 17, nh = [17, 17, 17, 17], no = 4, lr = .1):
     #load the training dataset
-    file = open("PickleMoves", 'rb')
+    file = open("ExtraInfo", 'rb')
     data = pickle.load(file)
     file.close()
     boards = []
@@ -193,7 +193,7 @@ def runTesting():
     file.close()
 
     #load the testing dataset
-    file = open("PickleMoves", 'rb')
+    file = open("ExtraInfo", 'rb')
     data = pickle.load(file)
     file.close
     print(len(data))
@@ -215,33 +215,49 @@ def runTesting():
             moves.append(3)
 
     #run the dataset through the trained neural network
+    print(boards)
     result = network.blind_test(boards)
 
     #compare result with right answers and find the correctness percentage
     mistakes = 0
     for i in range(len(result)):
-
         if result[i] != moves[i]:
             mistakes += 1
 
     print("Test mistakes", mistakes)
     print("Percentage", 1 - (mistakes / len(result)))
 
-error = runTraining(16, [10, 8], 4, .1)
-runTesting()
-#case = load_cases("demo_prep", helmerPath, True)
+def selectMove(board):
+    # Get stored network
+    file = open("trainedAnn", 'rb')
+    network = pickle.load(file)
+    file.close()
 
-"""epochs = []
-for i in range(len(error)):
-    epochs.append(i)"""
+    # Filter
+    networkBoard = [[]]
+    for i in range(len(board[0])):
+        networkBoard[0].append(board[0][i]/max(board[0]))
 
+    # Make input ready for insertion
+    if max(board[0]) == board[0][0]:
+        element = 2048
+    elif max(board[0]) == board[0][3]:
+        element = 1536
+    elif max(board[0]) == board[0][15]:
+        element = 1024
+    elif max(board[0]) == board[0][11]:
+        element = 512
+    else:
+        element = 0.0
+    networkBoard[0].append(element)
 
+    # Get a move using the network
+    moveNum = network.blind_test(networkBoard)
+    print(moveNum)
+    possibilities = ["w","d","s","a"]
+    move = possibilities[moveNum[0]]
+    return move
 
-"""plt.plot(epochs, error)
-plt.xlabel('epochs')
-plt.ylabel('error')
-plt.title('Result')
-plt.show()
-
-plt.plot(*zip(*hidden), marker='o', color='r', ls='')
-plt.show()"""
+# error = runTraining(17, [10, 8], 4, .1)
+# runTesting()
+# selectMove([[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]])
