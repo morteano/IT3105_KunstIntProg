@@ -395,7 +395,7 @@ def solver(board, gui):
 
     # Gather data
     dirs = []
-    file = open("trainedAnn", 'rb')
+    file = open("trainedAnnBadmoves", 'rb')
     network = pickle.load(file)
     file.close()
     storings = []
@@ -423,12 +423,12 @@ def solver(board, gui):
             dirs.append(dir)
 
     gui.drawBoard(node.board)
-    # text_file = open("BadMoves", "rb")
-    # storing = pickle.load(text_file)
-    # text_file.close()
-    # for store in storing:
-    #    storings.append(store)
-    text_file2 = open("BadMovestest", "wb")
+    text_file = open("BadMoves", "rb")
+    storing = pickle.load(text_file)
+    text_file.close()
+    for store in storing:
+       storings.append(store)
+    text_file2 = open("BadMoves", "wb")
     pickle.dump(storings, text_file2, protocol=pickle.HIGHEST_PROTOCOL)
     text_file2.close()
     return node.board
@@ -462,7 +462,7 @@ def testRun(iterations, gui):
 def networkPlay(board, gui):
     board, random, value, boardIndex = spawn(board)
     dirs = []
-    file = open("trainedAnn", 'rb')
+    file = open("trainedAnnBadmoves", 'rb')
     network = pickle.load(file)
     file.close()
     storings = []
