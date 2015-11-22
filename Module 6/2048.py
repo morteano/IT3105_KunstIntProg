@@ -4,6 +4,8 @@ from GUI import *
 import pickle
 from threading import Thread
 from TheanoFun import *
+import ai2048demo
+import random
 
 class Node:
     def __init__(self, board, lastMove):
@@ -218,7 +220,7 @@ def findHeuristic(depth, root, heur):
 
 # Search through the tree with alphabeta pruning. But gives the leaf nodes the heuristic of all nodes in the path.
 def findHeuristicMiniMaxAlphaBeta(depth, root, heur, alpha, beta):
-    heur += heuristicBoard(root.board)
+    heur += heuristicDownLeft(root.board)
     if depth == 0:
         return heur
     elif depth % 2 == 1:
@@ -395,7 +397,7 @@ def solver(board, gui):
 
     # Gather data
     dirs = []
-    file = open("trainedAnnBadmoves", 'rb')
+    file = open("trainedAnnDownLeft", 'rb')
     network = pickle.load(file)
     file.close()
     storings = []
@@ -406,37 +408,35 @@ def solver(board, gui):
                 break
         oldNode = node
         gui.drawBoard(node.board)
-        dir, index = minimax(depth, node)
+        dir2, index = minimax(depth, node)
         dir = selectOtherMove([board], dirs, network)
-        if max(board) < 2048:
-            storing = [node.board, dir]
-            storings.append(storing)
-        else:
-            break
-        board, modified = move(board, dir)
+        board, modified = move(board, dir2)
         if modified:
+            if max(board) < 2048:
+                storing = [list(node.board), dir2]
+                storings.append(storing)
+            else:
+                break
             dirs = []
             board, childIndex, value, boardIndex = spawn(board)
             node = Node(board, None)
             addRelations(depth, node)
         else:
             dirs.append(dir)
-
     gui.drawBoard(node.board)
-    text_file = open("BadMoves", "rb")
-    storing = pickle.load(text_file)
-    text_file.close()
-    for store in storing:
-       storings.append(store)
-    text_file2 = open("BadMoves", "wb")
+    # text_file = open("MovesDownLeftNew", "rb")
+    # storing = pickle.load(text_file)
+    # text_file.close()
+    # for store in storing:
+    #    storings.append(store)
+    text_file2 = open("MovesDownLeftNew", "wb")
     pickle.dump(storings, text_file2, protocol=pickle.HIGHEST_PROTOCOL)
     text_file2.close()
     return node.board
 
 
 def testRun(iterations, gui):
-    maxTiles = {32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0, 8192:0}
-    totalTime = 0
+    maxTiles = {8:0, 16:0, 32:0, 64:0, 128:0, 256:0, 512:0, 1024:0, 2048:0, 4096:0, 8192:0}
     for i in range(iterations):
         board = [0, 0, 0, 0,
              0, 0, 0, 0,
@@ -449,20 +449,41 @@ def testRun(iterations, gui):
         print(board)
         maxTiles[max(board)] += 1
         if (i+1) % 10 == 0:
+            print(i)
             print(maxTiles)
             print(maxTiles[2048], maxTiles[4096], sum(maxTiles.values()))
             print("Success rate: " + str((float(maxTiles[2048]+maxTiles[4096]))/sum(maxTiles.values())))
-        totalTime += t
-        time.sleep(3)
-    print(maxTiles)
-    print("Success rate: " + str(float(maxTiles[2048]+maxTiles[4096]+maxTiles[8192])/sum(maxTiles.values())))
-    avgT = totalTime/iterations
-    print("Average time was : " + str(int(avgT)/60) + " min and " + str(int(avgT)%60) + " sec")
+
+def demoRun(iterations, gui):
+    randomTiles = []
+    for i in range(50):
+        board = [0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0]
+        board = randomPlay(board, gui)
+        randomTiles.append(max(board))
+    text_file = open("randomResult", "wb")
+    pickle.dump(randomTiles, text_file, protocol=pickle.HIGHEST_PROTOCOL)
+    text_file.close()
+    text_file = open("randomResult", "rb")
+    randomTiles = pickle.load(text_file)
+    text_file.close()
+    networkTiles = []
+    for i in range(50):
+        board = [0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 0, 0]
+        board = networkPlay(board, gui)
+        networkTiles.append(max(board))
+    print(ai2048demo.welch(randomTiles, networkTiles))
+
 
 def networkPlay(board, gui):
     board, random, value, boardIndex = spawn(board)
     dirs = []
-    file = open("trainedAnnBadmoves", 'rb')
+    file = open("trainedAnnNew", 'rb')
     network = pickle.load(file)
     file.close()
     storings = []
@@ -471,16 +492,37 @@ def networkPlay(board, gui):
         if empty == 0:
             if not legalMoves(board):
                 break
-        print(board)
-        gui.drawBoard(board)
+        # gui.drawBoard(board)
         dir = selectOtherMove([board], dirs, network)
-        print(dir)
         board, modified = move(board, dir)
         if modified:
             dirs = []
             board, childIndex, value, boardIndex = spawn(board)
         else:
             dirs.append(dir)
+    gui.drawBoard(board)
+    return board
+
+def randomPlay(board, gui):
+    board, dummy, dummy, dummy = spawn(board)
+    while True:
+        empty = board.count(0)
+        if empty == 0:
+            if not legalMoves(board):
+                break
+        # gui.drawBoard(board)
+        var = random.random()
+        if var < 0.25:
+            dir = 'w'
+        elif var < 0.5:
+            dir = 'd'
+        elif var < 0.75:
+            dir = 's'
+        elif var < 1:
+            dir = 'a'
+        board, modified = move(board, dir)
+        if modified:
+            board, dummy, dummy, dummy = spawn(board)
     gui.drawBoard(board)
     return board
 
