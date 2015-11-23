@@ -20,6 +20,10 @@ def createCompVector(label):
 def relu(x):
     return theano.tensor.switch(x<0, 0, x)
 
+def softmax(X):
+    e_x = T.exp(X - X.max(axis=1).dimshuffle(0, 'x'))
+    return e_x / e_x.sum(axis=1).dimshuffle(0, 'x')
+
 class ann:
     #initiate values, and start building the neural network.
     #since there can be several layers of hidden nodes, nh is an array with amount of nodes in the corresponding layer
@@ -58,10 +62,14 @@ class ann:
                 self.b.append(theano.shared(np.random.uniform(-.1, .1, size = nob)))
 
         #activation functions
-        for i in range(len(nh)):
+        for i in range(len(nh)-1):
             if i == 0:
-                x.append(Tann.hard_sigmoid(T.dot(input, self.w[i]) + self.b[i]))
-            x.append(Tann.hard_sigmoid(T.dot(x[i], self.w[i + 1]) + self.b[i + 1]))
+                x.append(relu(T.dot(input, self.w[i]) + self.b[i]))
+            x.append(relu(T.dot(x[i], self.w[i + 1]) + self.b[i + 1]))
+            print("inside",i)
+        i = len(nh)-1
+        print("outside", i)
+        x.append(Tann.sigmoid(T.dot(x[i], self.w[i + 1]) + self.b[i + 1]))
 
         #error calculation, which gives least error for right guesses
         error = T.sum((x[len(nh)] - label)**2)
@@ -175,7 +183,7 @@ def runTraining(ni = 28**2, nh = [100], no = 10, lr = .1):
 
     #create and train the neural network
     network = ann(flatImages, labels, ni, nh, no, lr)
-    error = network.dotraining(labels, 10)
+    error = network.dotraining(labels, 100)
 
     #save the trained network
     file = open("trainedAnn", 'wb')
@@ -205,10 +213,10 @@ def runTesting(dataset):
         if result[i] != testLabels[i]:
             mistakes += 1
 
-    print("Test mistakes", mistakes)
+    print("Test mistakes", mistakes, "/", len(result))
     print("Percentage", 1 - (mistakes / len(result)))
 
-# error = runTraining(28**2, [100], 10, .1)
+error = runTraining(28**2, [50, 30], 10, .1)
 runTesting("training")
 runTesting("testing")
 #case = load_cases("demo_prep", helmerPath, True)
