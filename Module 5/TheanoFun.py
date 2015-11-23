@@ -62,14 +62,10 @@ class ann:
                 self.b.append(theano.shared(np.random.uniform(-.1, .1, size = nob)))
 
         #activation functions
-        for i in range(len(nh)-1):
+        for i in range(len(nh)):
             if i == 0:
-                x.append(relu(T.dot(input, self.w[i]) + self.b[i]))
-            x.append(relu(T.dot(x[i], self.w[i + 1]) + self.b[i + 1]))
-            print("inside",i)
-        i = len(nh)-1
-        print("outside", i)
-        x.append(Tann.sigmoid(T.dot(x[i], self.w[i + 1]) + self.b[i + 1]))
+                x.append(Tann.sigmoid(T.dot(input, self.w[i]) + self.b[i]))
+            x.append(Tann.sigmoid(T.dot(x[i], self.w[i + 1]) + self.b[i + 1]))
 
         #error calculation, which gives least error for right guesses
         error = T.sum((x[len(nh)] - label)**2)
@@ -183,7 +179,7 @@ def runTraining(ni = 28**2, nh = [100], no = 10, lr = .1):
 
     #create and train the neural network
     network = ann(flatImages, labels, ni, nh, no, lr)
-    error = network.dotraining(labels, 100)
+    error = network.dotraining(labels, 40)
 
     #save the trained network
     file = open("trainedAnn", 'wb')
@@ -216,10 +212,16 @@ def runTesting(dataset):
     print("Test mistakes", mistakes, "/", len(result))
     print("Percentage", 1 - (mistakes / len(result)))
 
-error = runTraining(28**2, [50, 30], 10, .1)
+def runDemoTest():
+    file = open("trainedAnn", 'rb')
+    network = pickle.load(file)
+    file.close()
+    minor_demo(network)
+
+error = runTraining(28**2, [50, 30], 10, .01)
 runTesting("training")
 runTesting("testing")
-#case = load_cases("demo_prep", helmerPath, True)
+runDemoTest()
 
 """epochs = []
 for i in range(len(error)):
